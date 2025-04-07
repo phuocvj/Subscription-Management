@@ -43,9 +43,7 @@ export default function HomePage() {
 
   return (
     <main className="flex flex-col justify-center items-center space-y-10 px-6 min-h-screen">
-      <div className="top-4 right-4 absolute">
-        <ThemeToggleButton />
-      </div>
+      
 
       <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
 
@@ -96,19 +94,19 @@ export default function HomePage() {
         {/* Donation box nằm bên phải trên desktop */}
         <div className="flex flex-col items-center w-full lg:w-96">
           <div className="space-y-4 text-center">
-            <p className="text-neutral-700 dark:text-neutral-300 text-base">
+            <p className="">
               💬 Hiện tại mình chưa có kinh phí để thuê server, vì vậy toàn bộ dữ liệu subscription đang được lưu
               <strong> cục bộ trên thiết bị của bạn</strong>. Dữ liệu này hoàn toàn riêng tư và không ai khác có thể truy cập.
             </p>
-            <p className="text-neutral-700 dark:text-neutral-300 text-base">
+            <p className="">
               ⚠️ Tuy nhiên, nếu bạn cài lại máy hoặc mất thiết bị thì dữ liệu sẽ bị mất. Nếu có kinh phí triển khai server và database,
               hệ thống sẽ lưu trữ vĩnh viễn và đồng bộ mọi lúc, mọi nơi.
             </p>
-            <p className="font-semibold text-neutral-900 dark:text-white text-base">
+            <p className="font-semibold">
               🙏 Nếu bạn thấy dự án hữu ích, hãy ủng hộ một chút chi phí để mình có thể duy trì và phát triển thêm nhé!
             </p>
             <hr className="my-4 border-gray-300 dark:border-zinc-600" />
-            <p className="text-neutral-500 dark:text-neutral-400 text-sm italic">
+            <p className="dark:text-neutral-400 text-sm italic">
               💬 Currently, due to limited budget, I don't have a server — so your data is stored locally and is fully private.
               However, it will be lost if you reinstall or lose your device. A database would allow permanent, secure storage.
               If you find this tool useful, consider supporting this project!
@@ -118,7 +116,7 @@ export default function HomePage() {
           <div className="mt-10 text-center">
             <h3 className="mb-2 font-semibold text-xl">🎁 Ủng hộ tác giả</h3>
             <p className="mb-4 text-gray-500">Quét mã QR để chuyển khoản Vietinbank</p>
-            <div className="inline-block bg-white dark:bg-zinc-800 shadow p-4 rounded-lg">
+            <div className="inline-block p-4 rounded-lg">
               <img
                 src="/vietqr.gif"
                 alt="QR Vietinbank"
@@ -148,7 +146,7 @@ export default function HomePage() {
 
       {/* Popup zoom QR */}
       {showZoomQR && (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/60" onClick={() => setShowZoomQR(false)}>
+        <div className="z-50 fixed inset-0 flex justify-center items-center" onClick={() => setShowZoomQR(false)}>
           <img
             src="/vietqr.gif"
             alt="QR Vietinbank"

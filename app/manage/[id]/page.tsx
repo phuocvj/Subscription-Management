@@ -7,7 +7,6 @@ import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
 import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 
-
 // Loại thành viên
 type Member = {
     name: string
@@ -32,7 +31,6 @@ export default function ManageSubscriptionPage() {
     const { id } = useParams()
     const code = id as string
 
-
     const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
     const [currentMonth, setCurrentMonth] = useState<string>('')
     const [newMember, setNewMember] = useState('')
@@ -40,6 +38,17 @@ export default function ManageSubscriptionPage() {
     const [showCloneModal, setShowCloneModal] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
     const router = useRouter()
+
+    // Cập nhật class dark/light từ localStorage
+    useEffect(() => {
+        const theme = localStorage.getItem('theme')
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    }, [])
+
     useEffect(() => {
         const now = new Date()
         const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
@@ -88,11 +97,13 @@ export default function ManageSubscriptionPage() {
             }
         })
     }
+
     const handleDeleteSubscription = () => {
         if (!window.confirm('Bạn có chắc muốn huỷ subscription này không?')) return
         localStorage.removeItem(`subscription:${code}`)
         router.push('/')
     }
+
     const addMember = () => {
         if (!subscription || newMember.trim() === '') return
 
@@ -129,7 +140,6 @@ export default function ManageSubscriptionPage() {
         setTimeout(() => setHighlightIndex(null), 2000)
     }
 
-
     const removeMember = (index: number) => {
         if (!subscription) return
         const month = subscription.history[currentMonth]
@@ -138,7 +148,6 @@ export default function ManageSubscriptionPage() {
         const updatedMembers = [...month.members]
         updatedMembers.splice(index, 1)
 
-        // Tự động chia lại nếu có tổng số tiền
         const amount = month.amount
         const perPerson = updatedMembers.length > 0 ? +(amount / updatedMembers.length).toFixed(0) : 0
         const membersWithAmount = updatedMembers.map(m => ({ ...m, amount: perPerson }))
@@ -154,7 +163,6 @@ export default function ManageSubscriptionPage() {
             }
         })
     }
-
 
     const togglePaid = (index: number) => {
         if (!subscription) return
@@ -338,7 +346,7 @@ export default function ManageSubscriptionPage() {
                     {current.members.map((m, i) => (
                         <div
                             key={i}
-                            className={`flex items-center justify-between gap-4 p-3 rounded-lg border shadow-sm transition duration-300 ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-white dark:bg-zinc-800'}`}
+                            className={`flex items-center justify-between gap-4 p-3 rounded-lg border shadow-sm transition duration-300 ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''} ${m.paid ? '' : ''}`}
                         >
                             <div className="flex items-center gap-3">
                                 <button onClick={() => togglePaid(i)} title="Đã thanh toán?">
@@ -350,7 +358,7 @@ export default function ManageSubscriptionPage() {
                                 </button>
                                 <div>
                                     <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
-                                    <div className="text-gray-500 text-sm">{m.amount.toLocaleString()}₫</div>
+                                    <div className="text-sm">{m.amount.toLocaleString()}₫</div>
                                 </div>
                             </div>
 
@@ -360,7 +368,7 @@ export default function ManageSubscriptionPage() {
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú"
-                                    className="dark:bg-zinc-700 px-2 py-1 border rounded w-40 text-sm"
+                                    className="px-2 py-1 border rounded w-full text-sm"
                                 />
                                 <button
                                     onClick={() => removeMember(i)}

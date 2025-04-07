@@ -1,4 +1,14 @@
+// app/layout.tsx
 import './globals.css'
+import { Inter } from 'next/font/google'
+import ThemeProvider from './components/ThemeProvider'
+import ThemeToggleButton from './components/ThemeToggleButton'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata = {
   title: 'Subscription Manager',
@@ -6,12 +16,17 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+
   return (
-    <html lang="vi" suppressHydrationWarning>
-      <body className="bg-white dark:bg-zinc-900 p-4 text-black dark:text-white transition-colors duration-300">
-        {children}
+    <html lang="en" className={inter.variable}>
+      <body className="font-sans">
+        <ThemeProvider>
+          <div className="top-4 right-4 absolute">
+            <ThemeToggleButton />
+          </div>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )
 }
-
