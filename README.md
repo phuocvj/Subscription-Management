@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📋 Subscription Manager
 
-## Getting Started
+---
 
-First, run the development server:
+## 🇻🇳 Giới thiệu
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**Subscription Manager** là ứng dụng giúp bạn quản lý các đăng ký dịch vụ (subscriptions) một cách **dễ dàng** và **trực quan**, phân loại rõ ràng theo **tháng**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ⚠️ Tình trạng hiện tại
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Dữ liệu hiện được lưu **cục bộ trên thiết bị của bạn**, đảm bảo **riêng tư tuyệt đối**.
+- Tuy nhiên, nếu bạn **cài lại máy** hoặc **mất thiết bị**, dữ liệu sẽ **bị mất vĩnh viễn**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🙏 Lời kêu gọi ủng hộ
 
-## Learn More
+> Mình mong muốn nhận được sự ủng hộ từ cộng đồng để:
+> - Phát triển hệ thống **backend server riêng**
+> - Giúp **lưu trữ vĩnh viễn**, **đồng bộ hóa**, và sử dụng **đa thiết bị**
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🇺🇸 Introduction 
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Subscription Manager** is a minimalist app that helps you **track and manage your subscriptions**, organized by **month**.
 
-## Deploy on Vercel
+### ⚠️ Current Limitation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- All your data is stored **locally on your device**, ensuring **complete privacy**.
+- However, this also means if you **reinstall your system** or **lose your device**, your data will be **lost forever**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 🙏 Support This Project
+
+> We would love your support to
+
+<img src="https://github.com/user-attachments/assets/7db97ae2-07ca-49b4-96a0-412b17877734" alt="vietqr" width="500" />
+
