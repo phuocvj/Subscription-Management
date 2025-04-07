@@ -9,11 +9,16 @@ import { QRCodeCanvas } from 'qrcode.react'
 import ThemeToggleButton from './components/ThemeToggleButton'
 import vietqr from '../vietqr.gif'
 
+type SubscriptionMeta = {
+  code: string
+  name: string
+  createdAt: string | null
+}
 export default function HomePage() {
   const router = useRouter()
-  const [subs, setSubs] = useState([])
-  const [qrCodeToShow, setQrCodeToShow] = useState(null)
-  const qrRef = useRef(null)
+  const [subs, setSubs] = useState<SubscriptionMeta[]>([])
+  const [qrCodeToShow, setQrCodeToShow] = useState<string | null>(null)
+  const qrRef = useRef<HTMLCanvasElement | null>(null)
   const [showZoomQR, setShowZoomQR] = useState(false)
 
   useEffect(() => {
@@ -24,7 +29,11 @@ export default function HomePage() {
         const code = key.replace('subscription:', '')
         try {
           const data = JSON.parse(localStorage.getItem(key) || '{}')
-          list.push({ code, name: data.name || '(chưa đặt tên)', createdAt: data.createdAt || null })
+          list.push({
+            code,
+            name: String(data.name || '(chưa đặt tên)'),
+            createdAt: data.createdAt ? String(data.createdAt) : null,
+          })
         } catch { }
       }
     }
@@ -43,7 +52,7 @@ export default function HomePage() {
 
   return (
     <main className="flex flex-col justify-center items-center space-y-10 px-6 min-h-screen">
-      
+
 
       <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
 
