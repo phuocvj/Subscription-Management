@@ -14,3 +14,22 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+@keyframes fade-in {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes popup-zoom {
+  from { opacity: 0; transform: scale(0.9) }
+  to { opacity: 1; transform: scale(1) }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-popup-zoom {
+  animation: popup-zoom 0.3s ease-out;
+}
+

@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FaPlusCircle, FaFolderOpen, FaGoogle, FaFacebookSquare, FaEnvelope } from 'react-icons/fa'
+import { FaPlusCircle, FaFolderOpen, FaGoogle, FaFacebookSquare, FaEnvelope, FaSignOutAlt } from 'react-icons/fa'
 import { SiThreads } from 'react-icons/si'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from './lib/supabase'
@@ -12,6 +12,7 @@ export default function HomePage() {
   const router = useRouter()
   const [subs, setSubs] = useState<any[]>([])
   const [session, setSession] = useState<any>(null)
+  const [invitedMap, setInvitedMap] = useState<Record<string, string>>({})
   const [qrCodeToShow, setQrCodeToShow] = useState<string | null>(null)
   const [showZoomQR, setShowZoomQR] = useState(false)
   const [passwordPrompt, setPasswordPrompt] = useState<{ code: string; requirePassword: boolean } | null>(null)
@@ -30,21 +31,54 @@ export default function HomePage() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       if (!session?.user) return
-  
-      const { data, error } = await supabase
+
+      // 1. Lấy danh sách subscription mà user sở hữu
+      const { data: owned, error: ownedError } = await supabase
         .from('subscriptions')
         .select('id, name, created_at, password')
-        .eq('owner_id', session.user.id) // 👈 chỉ lấy theo user đăng nhập
-        .order('created_at', { ascending: false })
-  
-      if (error) {
-        console.error('Lỗi khi lấy danh sách subscriptions:', error)
+        .eq('owner_id', session.user.id)
+
+      // 2. Lấy các subscription mà user được mời làm editor
+      const { data: invitedEditors = [], error: invitedError } = await supabase
+        .from('subscription_editors')
+        .select('subscription_id, email')
+        .eq('email', session.user.email.toLowerCase())
+        .eq('accepted', true)
+
+      let invitedSubs: any[] = []
+      let inviterMap: Record<string, string> = {}
+
+      if (invitedEditors?.length > 0) {
+        const ids = invitedEditors.map(i => i.subscription_id)
+        const { data: extraSubs, error: extraErr } = await supabase
+          .from('subscriptions')
+          .select('id, name, created_at, password')
+          .in('id', ids)
+
+        if (extraErr) {
+          console.error('Lỗi khi lấy subscriptions được mời:', extraErr)
+        } else {
+          invitedSubs = extraSubs || []
+          invitedEditors.forEach(i => {
+            inviterMap[i.subscription_id] = i.inviter_email
+          })
+        }
+      }
+
+      if (invitedError) {
+        console.error('Lỗi khi lấy danh sách người được mời:', invitedError)
         return
       }
-  
-      setSubs(data)
+
+      if (ownedError || invitedError) {
+        console.error('Lỗi khi lấy subscriptions:', ownedError || invitedError)
+        return
+      }
+
+      setInvitedMap(inviterMap)
+      setSubs([...(owned || []), ...invitedSubs])
     }
-  
+
     fetchSubscriptions()
   }, [session])
 
@@ -94,7 +128,16 @@ export default function HomePage() {
               <FaFolderOpen size={24} /> Open A Subscription
             </button>
           </div>
-          <button onClick={signOut} className="text-sm text-gray-500 hover:underline mt-2">Đăng xuất</button>
+          <div className="mt-2 text-sm  flex flex-col items-center">
+            <span className="mb-1">👋 Xin chào, <strong>{session.user.user_metadata.full_name} ({session.user.user_metadata.email})</strong></span>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-zinc-800 hover:bg-blue-200 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
+            >
+              <FaSignOutAlt />
+              Đăng xuất
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex justify-center">
@@ -106,16 +149,19 @@ export default function HomePage() {
 
       {session && (
         <div className="mt-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 border-2 border-gray-300 dark:border-zinc-600 rounded-lg p-6 shadow-md space-y-4">
             {subs.length > 0 && (
               <>
-                <h2 className="mb-4 font-semibold text-xl">📦 Các Subscription đã tạo</h2>
+                <h2 className="mb-4 font-semibold text-xl">📦 Các Subscription</h2>
                 <ul className="space-y-3">
                   {subs.map(sub => (
-                    <li key={sub.id} className="flex justify-between items-center gap-4 hover:bg-blue-50 dark:hover:bg-blue-900 shadow px-4 py-3 border rounded transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
+                    <li key={sub.id} className="flex justify-between items-center gap-4 hover:scale-105 shadow px-4 py-3 border rounded transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
                       <div className="flex-1">
                         <div className="font-mono text-gray-500 text-sm">Mã: {sub.id}</div>
                         <div className="font-semibold text-lg">{sub.name}</div>
+                        {invitedMap[sub.id] && (
+                          <div className="text-sm text-yellow-600">🔗 Được mời bởi: {invitedMap[sub.id]}</div>
+                        )}
                         {sub.created_at && (
                           <div className="mt-1 text-gray-500 text-sm">
                             📅 Ngày đăng ký: {new Date(sub.created_at).toLocaleDateString('vi-VN')}

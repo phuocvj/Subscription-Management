@@ -4,8 +4,9 @@ import { supabase } from '@/app/lib/supabase'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
-import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle } from 'react-icons/fa'
+import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
+import InviteList from '@/app/components/InviteList'
 
 // Loại thành viên
 type Member = {
@@ -32,24 +33,48 @@ type SubscriptionData = {
 export default function ManageSubscriptionPage() {
     const { id } = useParams()
     const code = id as string
-
+    const [userEmail, setUserEmail] = useState<string | null>(null)
+    const [isEditable, setIsEditable] = useState<boolean>(false)
     const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
     const [currentMonth, setCurrentMonth] = useState<string>('')
     const [newMember, setNewMember] = useState('')
     const [newAmount, setNewAmount] = useState<number>(0)
+    const [formattedAmount, setFormattedAmount] = useState<string>('')
+
     const [showCloneModal, setShowCloneModal] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
     const [ownerId, setOwnerId] = useState<string | null>(null)
-
+    //Popup Invite
+    const [invitePopup, setInvitePopup] = useState(false)
+    const [inviteEmail, setInviteEmail] = useState('')
+    const [pendingInvite, setPendingInvite] = useState(false)
     const router = useRouter()
 
-    const isEditable = userId && ownerId && userId === ownerId
+    // const isEditable = userId && ownerId && userId === ownerId
+    // Kiểm tra xem có phải người được mời chưa xác nhận không
+    useEffect(() => {
+        if (!userEmail) return
+        const checkPending = async () => {
+            const { data } = await supabase
+                .from('subscription_editors')
+                .select('email, accepted')
+                .eq('subscription_id', code)
+                .eq('email', userEmail.toLowerCase())
+                .maybeSingle()
+
+            if (data && !data.accepted) {
+                setPendingInvite(true)
+            }
+        }
+        checkPending()
+    }, [userEmail])
 
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { session } } = await supabase.auth.getSession()
             setUserId(session?.user.id ?? null)
+            setUserEmail(session?.user.email ?? null)
         }
         fetchUser()
     }, [])
@@ -102,6 +127,21 @@ export default function ManageSubscriptionPage() {
             }
 
             setSubscription(data)
+            if (row.owner_id === userId) {
+                setIsEditable(true)
+            } else {
+                // kiểm tra nếu user được mời và đã accept
+                const { data: editor } = await supabase
+                    .from('subscription_editors')
+                    .select('accepted')
+                    .eq('subscription_id', code)
+                    .eq('email', userEmail?.toLowerCase())
+                    .maybeSingle()
+
+                if (editor?.accepted) {
+                    setIsEditable(true)
+                }
+            }
         }
 
         if (userId) {
@@ -120,14 +160,19 @@ export default function ManageSubscriptionPage() {
                     password: subscription.password || '',
                     note: subscription.note || '',
                     data: subscription,
-                    owner_id: userId
+                    last_edited_at: new Date().toISOString(),
+                    last_edited_by: userId + '|' + userEmail, // hoặc userEmail nếu bạn thích
                 })
                 .eq('id', code)
         }
 
         saveData()
     }, [subscription, code, userId, isEditable])
+    useEffect(() => {
+        // Khi newAmount thay đổi, cập nhật formattedAmount
+        setFormattedAmount(newAmount > 0 ? newAmount.toLocaleString('en-US') : '')
 
+    }, [newAmount])
     // Tất cả các hàm handle* cũng cần thêm điều kiện isEditable
     const handleNameChange = (name: string) => {
         if (!isEditable) return
@@ -294,7 +339,7 @@ export default function ManageSubscriptionPage() {
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
-                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code}</span>
+                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code} ({userEmail})</span>
             </h1>
             <div className="flex items-center gap-3 mt-2">
                 <button
@@ -303,8 +348,39 @@ export default function ManageSubscriptionPage() {
                 >
                     <FaCalendarAlt /> Trang chủ
                 </button>
-            </div>
 
+                {isEditable && (
+                    <button
+                        onClick={() => setInvitePopup(true)}
+                        className="flex items-center gap-2 bg-indigo-100 dark:bg-indigo-800 px-3 py-1 rounded-md text-indigo-800 dark:text-white hover:scale-105 transition"
+                    >
+                        <FaUserPlus /> Mời quản lý
+                    </button>
+                )}
+            </div>
+            {pendingInvite && (
+                <div className="p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg shadow text-sm flex justify-between items-center">
+                    <span>📩 Bạn đã được mời quản lý subscription này. Nhấn để xác nhận và có quyền chỉnh sửa.</span>
+                    <button
+                        onClick={async () => {
+                            const { error } = await supabase
+                                .from('subscription_editors')
+                                .update({ accepted: true })
+                                .eq('subscription_id', code)
+                                .eq('email', userEmail?.toLowerCase())
+
+                            if (!error) {
+                                setPendingInvite(false)
+                                setIsEditable(true)
+                                alert('✅ Bạn đã chấp nhận lời mời!')
+                            }
+                        }}
+                        className="ml-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                        Đồng ý
+                    </button>
+                </div>
+            )}
             <div>
                 <label className="block mb-1 font-medium">📛 Tên Subscription</label>
                 <input
@@ -367,18 +443,20 @@ export default function ManageSubscriptionPage() {
             <div>
                 <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                 <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     disabled={!isEditable}
-                    value={newAmount === 0 ? '' : newAmount}
-                    onChange={e => {
-                        const amount = Number(e.target.value)
+                    value={formattedAmount}
+                    onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '') // chỉ giữ số
+                        const amount = Number(raw)
                         setNewAmount(amount)
 
-                        if (subscription) {
-                            const members = subscription.history[currentMonth]?.members || []
-                            const perPerson = members.length > 0 ? +(amount / members.length).toFixed(0) : 0
-                            const updatedMembers = members.map(m => ({ ...m, amount: perPerson }))
+                        const members = subscription?.history[currentMonth]?.members || []
+                        const perPerson = members.length > 0 ? +(amount / members.length).toFixed(0) : 0
+                        const updatedMembers = members.map(m => ({ ...m, amount: perPerson }))
 
+                        if (subscription) {
                             setSubscription({
                                 ...subscription,
                                 history: {
@@ -490,6 +568,64 @@ export default function ManageSubscriptionPage() {
                     onCreate={handleCloneNext12Months}
                 />
             )}
+
+
+            {invitePopup && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+                    <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="text-3xl">📧</span>
+                            <h2 className="text-xl font-bold">Mời người khác quản lý Subscription</h2>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                            Nhập địa chỉ email Google của người được mời
+                        </p>
+                        <input
+                            type="email"
+                            value={inviteEmail}
+                            onChange={e => setInviteEmail(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="example@gmail.com"
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button onClick={() => setInvitePopup(false)} className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                                Huỷ
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const email = inviteEmail.trim().toLowerCase()
+                                    if (!email) return
+
+                                    const { error } = await supabase.from('subscription_editors').upsert({
+                                        subscription_id: code,
+                                        email,
+                                        inviter_email: userEmail // 👈 cập nhật người gửi lời mời
+                                    }, { onConflict: 'subscription_id,email' })
+                                    if (error) alert('Lỗi khi mời: ' + error.message)
+                                    else alert('✅ Đã gửi lời mời thành công!')
+                                    setInviteEmail('')
+                                    setInvitePopup(false)
+                                }}
+                                className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white transition"
+                            >
+                                Gửi lời mời
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isEditable && (
+                <div className="mt-6 space-y-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                        📜 Danh sách người được mời quản lý
+                    </h3>
+
+                    <InviteList subscriptionId={code} />
+                </div>
+            )}
+
         </div>
     )
 }
