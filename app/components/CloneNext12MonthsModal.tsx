@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { FaTrash, FaPlus, FaMagic, FaTimes, FaCheck } from 'react-icons/fa'
+import {
+  FaTrash,
+  FaPlus,
+  FaMagic,
+  FaTimes,
+  FaCheck,
+} from 'react-icons/fa'
 
 export type Member = {
   name: string
@@ -10,10 +16,10 @@ export type Member = {
   amount: number
 }
 
-function getNext12Months(currentMonth: string): string[] {
+function getNextMonths(currentMonth: string, count = 12): string[] {
   const [curMonth, curYear] = currentMonth.split('/').map(Number)
   const months: string[] = []
-  for (let i = 1; i <= 12; i++) {
+  for (let i = 1; i <= count; i++) {
     const date = new Date(curYear, curMonth - 1 + i)
     const m = (date.getMonth() + 1).toString().padStart(2, '0')
     const y = date.getFullYear()
@@ -22,16 +28,23 @@ function getNext12Months(currentMonth: string): string[] {
   return months
 }
 
-type Props = {
-  currentMonth: string
-  members: Member[]
-  onClose: () => void
-  onCreate: (newMonths: Record<string, Member[]>) => void
+function getNextYears(currentYear: string, count = 5): string[] {
+  const y = parseInt(currentYear, 10)
+  return Array.from({ length: count }, (_, i) => `${y + i + 1}`)
 }
 
-export default function CloneNext12MonthsModal({
+type Props = {
+  currentMonth: string // hoặc currentYear nếu type = 'year'
+  members: Member[]
+  subscriptionType: 'month' | 'year'
+  onClose: () => void
+  onCreate: (newPeriods: Record<string, Member[]>) => void
+}
+
+export default function CloneNextPeriodsModal({
   currentMonth,
   members,
+  subscriptionType,
   onClose,
   onCreate
 }: Props) {
@@ -50,12 +63,15 @@ export default function CloneNext12MonthsModal({
 
   const addMember = () => {
     if (!newName.trim()) return
-    setEditableMembers(prev => [...prev, {
-      name: newName.trim(),
-      paid: false,
-      note: '',
-      amount: 0
-    }])
+    setEditableMembers(prev => [
+      ...prev,
+      {
+        name: newName.trim(),
+        paid: false,
+        note: '',
+        amount: 0
+      }
+    ])
     setNewName('')
   }
 
@@ -63,21 +79,51 @@ export default function CloneNext12MonthsModal({
     setEditableMembers(prev => prev.filter((_, i) => i !== index))
   }
 
-  const create12Months = () => {
-    const months = getNext12Months(currentMonth)
+  const createPeriods = () => {
+    let keys: string[] = []
+
+    if (subscriptionType === 'month') {
+      keys = getNextMonths(currentMonth, 12)
+    } else {
+      keys = getNextYears(currentMonth, 5)
+    }
+
+    // 👉 Lấy tổng tiền hiện tại (nếu có)
+    const totalAmount = Array.isArray(members)
+      ? members.reduce((sum, m) => sum + m.amount, 0)
+      : 0
+    const perPerson = editableMembers.length > 0
+      ? Math.round(totalAmount / editableMembers.length)
+      : 0
+
     const payload: Record<string, Member[]> = {}
-    months.forEach(m => {
-      payload[m] = editableMembers.map(member => ({ ...member }))
+    const full: Record<string, { amount: number; members: Member[] }> = {}
+
+    keys.forEach(k => {
+      const memberList = editableMembers.map(member => ({
+        ...member,
+        amount: perPerson
+      }))
+      payload[k] = memberList
+      full[k] = {
+        amount: totalAmount,
+        members: memberList
+      }
     })
+    // Gửi về cha
     onCreate(payload)
     onClose()
   }
+
 
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-40">
       <div className="bg-white dark:bg-zinc-900 shadow-lg p-6 rounded-lg w-full max-w-md text-black dark:text-white">
         <h2 className="flex items-center gap-2 mb-4 font-bold text-lg">
-          <FaMagic className="text-yellow-500" /> Tạo 12 tháng tiếp theo
+          <FaMagic className="text-yellow-500" />
+          {subscriptionType === 'year'
+            ? 'Tạo 5 năm tiếp theo'
+            : 'Tạo 12 tháng tiếp theo'}
         </h2>
 
         <div className="space-y-2 mb-3 max-h-52 overflow-auto">
@@ -117,10 +163,11 @@ export default function CloneNext12MonthsModal({
             <FaTimes /> Huỷ
           </button>
           <button
-            onClick={create12Months}
+            onClick={createPeriods}
             className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white"
           >
-            <FaCheck /> Tạo 12 tháng
+            <FaCheck />
+            {subscriptionType === 'year' ? 'Tạo 5 năm' : 'Tạo 12 tháng'}
           </button>
         </div>
       </div>

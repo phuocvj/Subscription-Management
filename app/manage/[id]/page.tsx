@@ -7,6 +7,7 @@ import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
 import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import InviteList from '@/app/components/InviteList'
+import CloneNextPeriodsModal from '@/app/components/CloneNext12MonthsModal'
 
 // Loại thành viên
 type Member = {
@@ -28,6 +29,7 @@ type SubscriptionData = {
     history: Record<string, MonthlyData>
     password?: string
     note?: string
+    subscription_type?: 'month' | 'year' // 👈 mới
 }
 
 export default function ManageSubscriptionPage() {
@@ -36,6 +38,8 @@ export default function ManageSubscriptionPage() {
     const [userEmail, setUserEmail] = useState<string | null>(null)
     const [isEditable, setIsEditable] = useState<boolean>(false)
     const [isOwner, setIsOwner] = useState<boolean>(false)
+
+    const [viewMode, setViewMode] = useState<'month' | 'year'>('month')
 
     const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
     const [currentMonth, setCurrentMonth] = useState<string>('')
@@ -85,7 +89,6 @@ export default function ManageSubscriptionPage() {
         }
         fetchUser()
     }, [])
-
     useEffect(() => {
         const fetchSubscription = async () => {
             const { data: row, error } = await supabase
@@ -99,8 +102,6 @@ export default function ManageSubscriptionPage() {
             }
 
             const now = new Date()
-            const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-            setCurrentMonth(monthKey)
 
             let data: SubscriptionData
 
@@ -110,16 +111,28 @@ export default function ManageSubscriptionPage() {
                     ...row.data,
                     password: row.password ?? '',
                     note: row.note ?? '',
+                    subscription_type: row.data?.subscription_type ?? 'month',
                 }
             } else {
-                // Nếu không có row (mã không tồn tại), không tạo mới nếu chưa đăng nhập
                 if (!userId) {
                     console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
                     return
                 }
 
-                // Tạo subscription mới nếu đang đăng nhập và chưa có
-                data = { name: '', history: {}, password: '', note: '' }
+                const defaultKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+                data = {
+                    name: '',
+                    history: {
+                        [defaultKey]: {
+                            amount: 0,
+                            members: []
+                        }
+                    },
+                    password: '',
+                    note: '',
+                    subscription_type: 'month'
+                }
+
                 await supabase.from('subscriptions').insert({
                     id: code,
                     name: '',
@@ -129,26 +142,38 @@ export default function ManageSubscriptionPage() {
                     last_edited_at: now.toISOString(),
                     last_edited_by: userId + '|' + userEmail,
                 })
+
                 setOwnerId(userId)
             }
 
-            // Đảm bảo có dữ liệu tháng hiện tại
-            if (!data.history[monthKey]) {
-                data.history[monthKey] = {
+            // 👇 Xác định key hiển thị ban đầu (dựa vào loại subscription)
+            const subType = data.subscription_type ?? 'month'
+            let displayKey = ''
+
+            if (subType === 'month') {
+                displayKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+            } else {
+                displayKey = `${now.getFullYear()}`
+            }
+
+            // 👇 Nếu key chưa tồn tại → thêm vào history
+            if (!data.history[displayKey]) {
+                data.history[displayKey] = {
                     amount: 0,
                     members: []
                 }
                 setNewAmount(0)
             } else {
-                setNewAmount(data.history[monthKey].amount ?? 0)
+                setNewAmount(data.history[displayKey].amount ?? 0)
             }
 
+            setCurrentMonth(displayKey)
             setSubscription(data)
 
-            // Xác định quyền chỉnh sửa
+            // 👇 Quyền chỉnh sửa
             if (row?.owner_id === userId) {
                 setIsEditable(true)
-                setIsOwner(true);
+                setIsOwner(true)
             } else if (userEmail) {
                 const { data: editor } = await supabase
                     .from('subscription_editors')
@@ -160,12 +185,93 @@ export default function ManageSubscriptionPage() {
                 if (editor?.accepted) {
                     setIsEditable(true)
                 }
-                setIsOwner(false);
+                setIsOwner(false)
             }
         }
 
         fetchSubscription()
     }, [code, userId, userEmail])
+
+    // useEffect(() => {
+    //     const fetchSubscription = async () => {
+    //         const { data: row, error } = await supabase
+    //             .from('subscriptions')
+    //             .select('*')
+    //             .eq('id', code)
+    //             .single()
+
+    //         if (error && error.code !== 'PGRST116') {
+    //             console.error('Lỗi khi load subscription:', error)
+    //         }
+
+    //         const now = new Date()
+    //         const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+    //         setCurrentMonth(monthKey)
+
+    //         let data: SubscriptionData
+
+    //         if (row) {
+    //             setOwnerId(row.owner_id || null)
+    //             data = {
+    //                 ...row.data,
+    //                 password: row.password ?? '',
+    //                 note: row.note ?? '',
+    //             }
+    //         } else {
+    //             // Nếu không có row (mã không tồn tại), không tạo mới nếu chưa đăng nhập
+    //             if (!userId) {
+    //                 console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
+    //                 return
+    //             }
+
+    //             // Tạo subscription mới nếu đang đăng nhập và chưa có
+    //             data = { name: '', history: {}, password: '', note: '' }
+    //             await supabase.from('subscriptions').insert({
+    //                 id: code,
+    //                 name: '',
+    //                 owner_id: userId,
+    //                 data,
+    //                 created_at: now.toISOString(),
+    //                 last_edited_at: now.toISOString(),
+    //                 last_edited_by: userId + '|' + userEmail,
+    //             })
+    //             setOwnerId(userId)
+    //         }
+
+    //         // Đảm bảo có dữ liệu tháng hiện tại
+    //         if (!data.history[monthKey]) {
+    //             data.history[monthKey] = {
+    //                 amount: 0,
+    //                 members: []
+    //             }
+    //             setNewAmount(0)
+    //         } else {
+    //             setNewAmount(data.history[monthKey].amount ?? 0)
+    //         }
+
+    //         setSubscription(data)
+
+    //         // Xác định quyền chỉnh sửa
+    //         if (row?.owner_id === userId) {
+    //             setIsEditable(true)
+    //             setIsOwner(true);
+    //         } else if (userEmail) {
+    //             const { data: editor } = await supabase
+    //                 .from('subscription_editors')
+    //                 .select('accepted')
+    //                 .eq('subscription_id', code)
+    //                 .eq('email', userEmail.toLowerCase())
+    //                 .maybeSingle()
+
+    //             if (editor?.accepted) {
+    //                 setIsEditable(true)
+    //             }
+    //             setIsOwner(false);
+    //         }
+    //     }
+
+    //     fetchSubscription()
+    // }, [code, userId, userEmail])
 
     useEffect(() => {
         const saveData = async () => {
@@ -180,6 +286,7 @@ export default function ManageSubscriptionPage() {
                     data: subscription,
                     last_edited_at: new Date().toISOString(),
                     last_edited_by: userId + '|' + userEmail, // hoặc userEmail nếu bạn thích
+                    subscription_type: subscription.subscription_type || 'month', // 👈 thêm vào đây
                 })
                 .eq('id', code)
         }
@@ -316,7 +423,8 @@ export default function ManageSubscriptionPage() {
 
     const switchMonth = (month: string) => {
         setCurrentMonth(month)
-        setNewAmount(0)
+        const amount = subscription?.history[month]?.amount ?? 0
+        setNewAmount(amount)
         setNewMember('')
         if (subscription && !subscription.history[month] && isEditable) {
             setSubscription({
@@ -328,7 +436,30 @@ export default function ManageSubscriptionPage() {
             })
         }
     }
+    const handleCloneNextPeriods = (newPeriods: Record<string, Member[]>) => {
+        if (!subscription || !isEditable) return
 
+        const currentAmount = subscription.history[currentMonth]?.amount || 0
+
+        const cloned: Record<string, MonthlyData> = {}
+
+        for (const [key, members] of Object.entries(newPeriods)) {
+            const perPerson = members.length > 0 ? +(currentAmount / members.length).toFixed(0) : 0
+            const membersWithAmount = members.map(m => ({ ...m, amount: perPerson }))
+            cloned[key] = {
+                amount: currentAmount,
+                members: membersWithAmount
+            }
+        }
+
+        setSubscription({
+            ...subscription,
+            history: {
+                ...subscription.history,
+                ...cloned
+            }
+        })
+    }
     const handleCloneNext12Months = (newMonths: Record<string, Member[]>) => {
         if (!subscription || !isEditable) return
 
@@ -447,9 +578,44 @@ export default function ManageSubscriptionPage() {
                     placeholder="Thông tin thêm về subscription..."
                 />
             </div>)}
-
             <div>
-                <label className="block mb-2 font-semibold text-lg">🗓️ Chọn tháng</label>
+                <label className="block mb-1 font-medium">📂 Kiểu Subscription</label>
+                <select
+                    disabled={!isEditable}
+                    value={subscription.subscription_type ?? 'month'}
+                    onChange={(e) => {
+                        if (!isEditable) return
+                        const type = e.target.value as 'month' | 'year'
+
+                        const now = new Date()
+                        const key = type === 'month'
+                            ? `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+                            : `${now.getFullYear()}`
+
+                        const newHistory = {
+                            [key]: {
+                                amount: 0,
+                                members: []
+                            }
+                        }
+
+                        setCurrentMonth(key)
+                        setSubscription(prev =>
+                            prev ? {
+                                ...prev,
+                                subscription_type: type,
+                                history: newHistory
+                            } : null
+                        )
+                    }}
+                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
+                >
+                    <option value="month">📅 Theo tháng</option>
+                    <option value="year">📆 Theo năm</option>
+                </select>
+            </div>
+            <div>
+                <label className="block mb-2 font-semibold text-lg">{subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}</label>
                 <div className="flex flex-wrap gap-2">
                     {Object.keys(subscription.history)
                         .sort((a, b) => {
@@ -528,6 +694,7 @@ export default function ManageSubscriptionPage() {
             </div>
 
             <div>
+              
                 <h2 className="flex items-center gap-2 mb-2 font-semibold text-lg">
                     <FaUserFriends className="text-green-600" /> Danh sách tháng {currentMonth}
                 </h2>
@@ -626,29 +793,31 @@ export default function ManageSubscriptionPage() {
                 </div>
 
 
-                {isEditable && (<div className="flex gap-4 mt-6">
-                    <button
-                        onClick={() => setShowCloneModal(true)}
-                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
-                    >
-                        <FaMagic /> Tạo 12 tháng tiếp theo
-                    </button>
-                    {isOwner && (<button
-                        onClick={handleDeleteSubscription}
-                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
-                    >
-                        <FaTrashAlt /> Huỷ subscription này
-                    </button>)}
-                </div>
+                {isEditable && (
+                    <div className="flex gap-4 mt-6">
+                        <button
+                            onClick={() => setShowCloneModal(true)}
+                            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
+                        >
+                            <FaMagic /> {subscription.subscription_type === 'year' ? 'Tạo 5 năm tiếp theo' : 'Tạo 12 tháng tiếp theo'}
+                        </button>
+                        {isOwner && (<button
+                            onClick={handleDeleteSubscription}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
+                        >
+                            <FaTrashAlt /> Huỷ subscription này
+                        </button>)}
+                    </div>
                 )}
             </div>
 
             {showCloneModal && (
-                <CloneNext12MonthsModal
+                <CloneNextPeriodsModal
                     currentMonth={currentMonth}
                     members={subscription.history[currentMonth]?.members ?? []}
+                    subscriptionType={subscription.subscription_type ?? 'month'} // 👈 thêm dòng này
                     onClose={() => setShowCloneModal(false)}
-                    onCreate={handleCloneNext12Months}
+                    onCreate={handleCloneNextPeriods}
                 />
             )}
 
