@@ -35,6 +35,8 @@ export default function ManageSubscriptionPage() {
     const code = id as string
     const [userEmail, setUserEmail] = useState<string | null>(null)
     const [isEditable, setIsEditable] = useState<boolean>(false)
+    const [isOwner, setIsOwner] = useState<boolean>(false)
+
     const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
     const [currentMonth, setCurrentMonth] = useState<string>('')
     const [newMember, setNewMember] = useState('')
@@ -146,6 +148,7 @@ export default function ManageSubscriptionPage() {
             // Xác định quyền chỉnh sửa
             if (row?.owner_id === userId) {
                 setIsEditable(true)
+                setIsOwner(true);
             } else if (userEmail) {
                 const { data: editor } = await supabase
                     .from('subscription_editors')
@@ -157,6 +160,7 @@ export default function ManageSubscriptionPage() {
                 if (editor?.accepted) {
                     setIsEditable(true)
                 }
+                setIsOwner(false);
             }
         }
 
@@ -187,6 +191,10 @@ export default function ManageSubscriptionPage() {
         setFormattedAmount(newAmount > 0 ? newAmount.toLocaleString('en-US') : '')
 
     }, [newAmount])
+
+
+
+
     // Tất cả các hàm handle* cũng cần thêm điều kiện isEditable
     const handleNameChange = (name: string) => {
         if (!isEditable) return
@@ -374,7 +382,7 @@ export default function ManageSubscriptionPage() {
                     <FaCalendarAlt /> Trang chủ
                 </button>
 
-                {isEditable && (
+                {isEditable && isOwner && (
                     <button
                         onClick={() => setInvitePopup(true)}
                         className="flex items-center gap-2 bg-indigo-100 dark:bg-indigo-800 px-3 py-1 rounded-md text-indigo-800 dark:text-white hover:scale-105 transition"
@@ -524,8 +532,16 @@ export default function ManageSubscriptionPage() {
                     <FaUserFriends className="text-green-600" /> Danh sách tháng {currentMonth}
                 </h2>
                 <div className="flex justify-between items-center mb-2 text-gray-600 text-sm">
-                    <span>👥 Tổng thành viên: {subscription.history[currentMonth].members.length}</span>
-                    <span>💸 Đã thu: {subscription.history[currentMonth].members.filter(m => m.paid).reduce((sum, m) => sum + m.amount, 0).toLocaleString()}₫</span>
+                    <div className="mb-2 text-gray-600 text-sm">
+                        👥 Tổng thành viên: {current.members.length} / {
+                            current.members.filter(m => m.paid).length
+                        } đã đóng · 💸 Tổng thu: {
+                            current.members
+                                .filter(m => m.paid)
+                                .reduce((sum, m) => sum + m.amount, 0)
+                                .toLocaleString('en-US')
+                        }₫
+                    </div>
                 </div>
 
                 <div className="gap-3 grid">
@@ -542,7 +558,40 @@ export default function ManageSubscriptionPage() {
                                     </button>
                                     <div>
                                         <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
-                                        <div className="text-sm">{m.amount.toLocaleString('en-US')}₫</div>
+                                        {isEditable ? (
+                                            <div className="relative w-28">
+
+                                                <input
+                                                    type="text"
+                                                    className="text-sm border rounded px-2 py-1 w-28 text-center"
+                                                    value={m.amount === 0 ? '' : m.amount.toLocaleString('en-US')}
+                                                    onChange={(e) => {
+                                                        const raw = e.target.value.replace(/,/g, '')
+                                                        const value = parseInt(raw || '0', 10)
+
+                                                        const month = subscription.history[currentMonth]
+                                                        const updatedMembers = [...month.members]
+                                                        updatedMembers[i].amount = value
+
+                                                        setSubscription({
+                                                            ...subscription,
+                                                            history: {
+                                                                ...subscription.history,
+                                                                [currentMonth]: {
+                                                                    ...month,
+                                                                    members: updatedMembers,
+                                                                },
+                                                            },
+                                                        })
+                                                    }}
+                                                    placeholder="0"
+                                                />
+                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm ">₫</span>
+
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm">{m.amount.toLocaleString('en-US')}₫</div>
+                                        )}
                                     </div>
                                 </div>
                                 {isEditable && (
@@ -555,7 +604,6 @@ export default function ManageSubscriptionPage() {
                                     </button>
                                 )}
                             </div>
-
                             {/* 👇 Đây là phần mới: note nằm ở dưới, full width */}
                             {isEditable ? (
                                 <textarea
@@ -577,22 +625,21 @@ export default function ManageSubscriptionPage() {
                     ))}
                 </div>
 
-                {isEditable && (
-                    <div className="flex gap-4 mt-6">
-                        <button
-                            onClick={() => setShowCloneModal(true)}
-                            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
-                        >
-                            <FaMagic /> Tạo 12 tháng tiếp theo
-                        </button>
 
-                        <button
-                            onClick={handleDeleteSubscription}
-                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
-                        >
-                            <FaTrashAlt /> Huỷ subscription này
-                        </button>
-                    </div>
+                {isEditable && (<div className="flex gap-4 mt-6">
+                    <button
+                        onClick={() => setShowCloneModal(true)}
+                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
+                    >
+                        <FaMagic /> Tạo 12 tháng tiếp theo
+                    </button>
+                    {isOwner && (<button
+                        onClick={handleDeleteSubscription}
+                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
+                    >
+                        <FaTrashAlt /> Huỷ subscription này
+                    </button>)}
+                </div>
                 )}
             </div>
 
@@ -652,7 +699,7 @@ export default function ManageSubscriptionPage() {
                 </div>
             )}
 
-            {isEditable && (
+            {isEditable && isOwner && (
                 <div className="mt-6 space-y-2">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
                         📜 Danh sách người được mời quản lý

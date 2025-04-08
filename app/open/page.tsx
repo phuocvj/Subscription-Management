@@ -2,18 +2,36 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/app/lib/supabase'
 
 export default function OpenPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleSubmit = () => {
-    const data = localStorage.getItem(`subscription:${code}`)
+  const handleSubmit = async () => {
+    setError('')
+    setLoading(true)
+
+    const { data, error: supaError } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('id', code.trim().toUpperCase())
+      .maybeSingle()
+
+    setLoading(false)
+
+    if (supaError) {
+      console.error('Lỗi khi truy vấn Supabase:', supaError)
+      setError('Đã có lỗi xảy ra. Vui lòng thử lại.')
+      return
+    }
+
     if (data) {
-      router.push(`/manage/${code}`)
+      router.push(`/manage/${data.id}`)
     } else {
-      setError('Mã không tồn tại. Vui lòng kiểm tra lại.')
+      setError('❌ Mã không tồn tại. Vui lòng kiểm tra lại.')
     }
   }
 
@@ -29,9 +47,10 @@ export default function OpenPage() {
       {error && <p className="mb-2 text-red-500 text-sm">{error}</p>}
       <button
         onClick={handleSubmit}
-        className="bg-green-600 px-4 py-2 rounded text-white"
+        disabled={loading}
+        className="bg-green-600 px-4 py-2 rounded text-white hover:bg-green-700 transition disabled:opacity-50"
       >
-        Mở Subscription
+        {loading ? '🔍 Đang kiểm tra...' : 'Mở Subscription'}
       </button>
     </div>
   )
