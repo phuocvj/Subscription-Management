@@ -2,7 +2,7 @@
 'use client'
 import { supabase } from '@/app/lib/supabase'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
 import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
@@ -33,13 +33,16 @@ type SubscriptionData = {
 }
 
 export default function ManageSubscriptionPage() {
-    const { id } = useParams()
-    const code = id as string
+    const params = useParams()
+    const searchParams = useSearchParams()
+
+    const code = params.id as string
+    const subscriptionType = (searchParams.get('type') as 'month' | 'year') || 'month'
+
     const [userEmail, setUserEmail] = useState<string | null>(null)
     const [isEditable, setIsEditable] = useState<boolean>(false)
     const [isOwner, setIsOwner] = useState<boolean>(false)
 
-    const [viewMode, setViewMode] = useState<'month' | 'year'>('month')
 
     const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
     const [currentMonth, setCurrentMonth] = useState<string>('')
@@ -111,7 +114,7 @@ export default function ManageSubscriptionPage() {
                     ...row.data,
                     password: row.password ?? '',
                     note: row.note ?? '',
-                    subscription_type: row.data?.subscription_type ?? 'month',
+                    subscription_type: subscriptionType,
                 }
             } else {
                 if (!userId) {
@@ -130,7 +133,7 @@ export default function ManageSubscriptionPage() {
                     },
                     password: '',
                     note: '',
-                    subscription_type: 'month'
+                    subscription_type: subscriptionType
                 }
 
                 await supabase.from('subscriptions').insert({
@@ -147,7 +150,7 @@ export default function ManageSubscriptionPage() {
             }
 
             // 👇 Xác định key hiển thị ban đầu (dựa vào loại subscription)
-            const subType = data.subscription_type ?? 'month'
+            const subType = subscriptionType ?? 'month'
             let displayKey = ''
 
             if (subType === 'month') {
@@ -460,39 +463,10 @@ export default function ManageSubscriptionPage() {
             }
         })
     }
-    const handleCloneNext12Months = (newMonths: Record<string, Member[]>) => {
-        if (!subscription || !isEditable) return
 
-        const currentAmount = subscription.history[currentMonth]?.amount || 0
-
-        const cloned: Record<string, MonthlyData> = {}
-        for (const [month, members] of Object.entries(newMonths)) {
-            const perPerson = members.length > 0 ? +(currentAmount / members.length).toFixed(0) : 0
-            const membersWithAmount = members.map(m => ({ ...m, amount: perPerson }))
-            cloned[month] = {
-                amount: currentAmount,
-                members: membersWithAmount
-            }
-        }
-
-        setSubscription({
-            ...subscription,
-            history: {
-                ...subscription.history,
-                ...cloned
-            }
-        })
-    }
-    // if (checkingAuth) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center text-lg text-blue-600 animate-pulse">
-    //             🔄 Đang kiểm tra đăng nhập...
-    //         </div>
-    //     )
-    // }
     if (!subscription || !currentMonth || !subscription.history[currentMonth])
         return (
-            <div className="min-h-screen flex items-center justify-center text-lg text-blue-600 animate-pulse">
+            <div className="flex justify-center items-center min-h-screen text-blue-600 text-lg animate-pulse">
                 🔄 Đang kiểm tra dữ liệu...
             </div>
         )
@@ -503,7 +477,7 @@ export default function ManageSubscriptionPage() {
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
-                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code}</span>
+                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code} {subscriptionType === "month" ? "Đăng ký tháng" : "Đăng ký năm"}</span>
             </h1>
             <div className="flex items-center gap-3 mt-2">
                 <button
@@ -523,7 +497,7 @@ export default function ManageSubscriptionPage() {
                 )}
             </div>
             {pendingInvite && (
-                <div className="p-4 bg-yellow-100 dark:bg-yellow-900 rounded-lg shadow text-sm flex justify-between items-center">
+                <div className="flex justify-between items-center bg-yellow-100 dark:bg-yellow-900 shadow p-4 rounded-lg text-sm">
                     <span>📩 Bạn đã được mời quản lý subscription này. Nhấn để xác nhận và có quyền chỉnh sửa.</span>
                     <button
                         onClick={async () => {
@@ -539,7 +513,7 @@ export default function ManageSubscriptionPage() {
                                 alert('✅ Bạn đã chấp nhận lời mời!')
                             }
                         }}
-                        className="ml-4 px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                        className="bg-green-600 hover:bg-green-700 ml-4 px-3 py-1 rounded text-white"
                     >
                         Đồng ý
                     </button>
@@ -551,7 +525,7 @@ export default function ManageSubscriptionPage() {
                     disabled={!isEditable}
                     value={subscription.name}
                     onChange={e => handleNameChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
+                    className="disabled:opacity-60 px-3 py-2 border rounded w-full"
                     placeholder="VD: ChatGPT, Netflix..."
                 />
             </div>
@@ -563,7 +537,7 @@ export default function ManageSubscriptionPage() {
                     type="password"
                     value={subscription.password || ''}
                     onChange={e => handlePasswordChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
+                    className="disabled:opacity-60 px-3 py-2 border rounded w-full"
                     placeholder="Nhập mật khẩu nếu cần"
                 />
             </div>)}
@@ -574,50 +548,21 @@ export default function ManageSubscriptionPage() {
                     disabled={!isEditable}
                     value={subscription.note || ''}
                     onChange={e => handleNoteChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
+                    className="disabled:opacity-60 px-3 py-2 border rounded w-full"
                     placeholder="Thông tin thêm về subscription..."
                 />
             </div>)}
-            <div>
-                <label className="block mb-1 font-medium">📂 Kiểu Subscription</label>
-                <select
-                    disabled={!isEditable}
-                    value={subscription.subscription_type ?? 'month'}
-                    onChange={(e) => {
-                        if (!isEditable) return
-                        const type = e.target.value as 'month' | 'year'
 
-                        const now = new Date()
-                        const key = type === 'month'
-                            ? `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-                            : `${now.getFullYear()}`
-
-                        const newHistory = {
-                            [key]: {
-                                amount: 0,
-                                members: []
-                            }
-                        }
-
-                        setCurrentMonth(key)
-                        setSubscription(prev =>
-                            prev ? {
-                                ...prev,
-                                subscription_type: type,
-                                history: newHistory
-                            } : null
-                        )
-                    }}
-                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
-                >
-                    <option value="month">📅 Theo tháng</option>
-                    <option value="year">📆 Theo năm</option>
-                </select>
-            </div>
             <div>
                 <label className="block mb-2 font-semibold text-lg">{subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}</label>
                 <div className="flex flex-wrap gap-2">
                     {Object.keys(subscription.history)
+                        .filter(key => {
+                            // Nếu subscription_type là 'year', chỉ lấy key dạng YYYY
+                            if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key)
+                            // Nếu là 'month', chỉ lấy dạng MM/YYYY
+                            return /^\d{2}\/\d{4}$/.test(key)
+                        })
                         .sort((a, b) => {
                             const [aM, aY] = a.split('/').map(Number)
                             const [bM, bY] = b.split('/').map(Number)
@@ -669,7 +614,7 @@ export default function ManageSubscriptionPage() {
                         }
                     }}
                     placeholder="Nhập số tiền"
-                    className="px-4 py-2 border rounded w-full text-base disabled:opacity-60"
+                    className="disabled:opacity-60 px-4 py-2 border rounded w-full text-base"
                 />
             </div>
 
@@ -681,12 +626,12 @@ export default function ManageSubscriptionPage() {
                         value={newMember}
                         onChange={e => setNewMember(e.target.value)}
                         placeholder="Tên thành viên"
-                        className="flex-1 px-4 py-2 border rounded-md text-base disabled:opacity-60"
+                        className="flex-1 disabled:opacity-60 px-4 py-2 border rounded-md text-base"
                     />
                     <button
                         disabled={!isEditable}
                         onClick={addMember}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white text-base disabled:opacity-50"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-md text-white text-base"
                     >
                         <FaPlus className="text-lg" /> Thêm
                     </button>
@@ -694,7 +639,7 @@ export default function ManageSubscriptionPage() {
             </div>
 
             <div>
-              
+
                 <h2 className="flex items-center gap-2 mb-2 font-semibold text-lg">
                     <FaUserFriends className="text-green-600" /> Danh sách tháng {currentMonth}
                 </h2>
@@ -718,7 +663,7 @@ export default function ManageSubscriptionPage() {
                             className={`flex flex-col gap-2 p-3 rounded-lg border shadow-sm transition duration-300
                           ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''}`}
                         >
-                            <div className="flex items-center justify-between gap-4">
+                            <div className="flex justify-between items-center gap-4">
                                 <div className="flex items-center gap-3">
                                     <button onClick={() => togglePaid(i)} disabled={!isEditable}>
                                         {m.paid ? <FaCheckCircle className="text-green-500" /> : <FaRegCircle className="text-gray-400" />}
@@ -730,7 +675,7 @@ export default function ManageSubscriptionPage() {
 
                                                 <input
                                                     type="text"
-                                                    className="text-sm border rounded px-2 py-1 w-28 text-center"
+                                                    className="px-2 py-1 border rounded w-28 text-sm text-center"
                                                     value={m.amount === 0 ? '' : m.amount.toLocaleString('en-US')}
                                                     onChange={(e) => {
                                                         const raw = e.target.value.replace(/,/g, '')
@@ -753,7 +698,7 @@ export default function ManageSubscriptionPage() {
                                                     }}
                                                     placeholder="0"
                                                 />
-                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm ">₫</span>
+                                                <span className="top-1/2 right-2 absolute text-sm -translate-y-1/2">₫</span>
 
                                             </div>
                                         ) : (
@@ -778,12 +723,12 @@ export default function ManageSubscriptionPage() {
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú..."
-                                    className="mt-2 px-3 py-2 rounded border w-full text-sm resize-y disabled:opacity-60"
+                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full text-sm resize-y"
                                     rows={2}
                                 />
                             ) : (
                                 m.note && (
-                                    <div className="mt-2 text-sm italic text-gray-500">
+                                    <div className="mt-2 text-gray-500 text-sm italic">
                                         📝 {m.note}
                                     </div>
                                 )
@@ -823,25 +768,25 @@ export default function ManageSubscriptionPage() {
 
 
             {invitePopup && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-                    <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
+                <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in">
+                    <div className="bg-white dark:bg-zinc-800 shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">📧</span>
-                            <h2 className="text-xl font-bold">Mời người khác quản lý Subscription</h2>
+                            <h2 className="font-bold text-xl">Mời người khác quản lý Subscription</h2>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        <p className="mb-3 text-gray-600 dark:text-gray-300 text-sm">
                             Nhập địa chỉ email Google của người được mời
                         </p>
                         <input
                             type="email"
                             value={inviteEmail}
                             onChange={e => setInviteEmail(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
                             placeholder="example@gmail.com"
                             autoFocus
                         />
                         <div className="flex justify-end gap-2">
-                            <button onClick={() => setInvitePopup(false)} className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                            <button onClick={() => setInvitePopup(false)} className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-md transition">
                                 Huỷ
                             </button>
                             <button
@@ -859,7 +804,7 @@ export default function ManageSubscriptionPage() {
                                     setInviteEmail('')
                                     setInvitePopup(false)
                                 }}
-                                className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white transition"
+                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md text-white transition"
                             >
                                 Gửi lời mời
                             </button>
@@ -869,8 +814,8 @@ export default function ManageSubscriptionPage() {
             )}
 
             {isEditable && isOwner && (
-                <div className="mt-6 space-y-2">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                <div className="space-y-2 mt-6">
+                    <h3 className="flex items-center gap-2 font-semibold text-lg">
                         📜 Danh sách người được mời quản lý
                     </h3>
 

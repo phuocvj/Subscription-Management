@@ -3,31 +3,25 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { FaSun, FaMoon } from 'react-icons/fa'
-import { MdSync } from 'react-icons/md' // icon auto
 
-type ThemeMode = 'light' | 'dark' | 'auto'
+type ThemeMode = 'light' | 'dark'
 
 export default function ThemeToggleButton() {
-  const [theme, setTheme] = useState<ThemeMode>('auto')
+  const [theme, setTheme] = useState<ThemeMode>('light')
   const [showPopup, setShowPopup] = useState(false)
 
   const applyTheme = (mode: ThemeMode) => {
-    if (mode === 'auto') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      document.documentElement.classList.toggle('dark', prefersDark)
-    } else {
-      document.documentElement.classList.toggle('dark', mode === 'dark')
-    }
+    document.documentElement.classList.toggle('dark', mode === 'dark')
   }
 
   useEffect(() => {
-    const saved = (localStorage.getItem('theme') as ThemeMode) || 'auto'
+    const saved = (localStorage.getItem('theme') as ThemeMode) || 'light'
     setTheme(saved)
     applyTheme(saved)
   }, [])
 
   const nextTheme = (current: ThemeMode): ThemeMode =>
-    current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light'
+    current === 'light' ? 'dark' : 'light'
 
   const toggleTheme = () => {
     const newTheme = nextTheme(theme)
@@ -39,15 +33,11 @@ export default function ThemeToggleButton() {
   }
 
   const renderIcon = () => {
-    if (theme === 'light') return <FaSun />
-    if (theme === 'dark') return <FaMoon />
-    return <MdSync />
+    return theme === 'light' ? <FaSun /> : <FaMoon />
   }
 
   const renderPopupIcon = () => {
-    if (theme === 'light') return <FaSun size={100} />
-    if (theme === 'dark') return <FaMoon size={100} />
-    return <MdSync size={100} />
+    return theme === 'light' ? <FaSun size={100} /> : <FaMoon size={100} />
   }
 
   return (
