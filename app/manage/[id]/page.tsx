@@ -49,6 +49,8 @@ export default function ManageSubscriptionPage() {
     const [invitePopup, setInvitePopup] = useState(false)
     const [inviteEmail, setInviteEmail] = useState('')
     const [pendingInvite, setPendingInvite] = useState(false)
+    const [checkingAuth, setCheckingAuth] = useState(true)
+
     const router = useRouter()
 
     // const isEditable = userId && ownerId && userId === ownerId
@@ -73,6 +75,9 @@ export default function ManageSubscriptionPage() {
     useEffect(() => {
         const fetchUser = async () => {
             const { data: { session } } = await supabase.auth.getSession()
+
+
+
             setUserId(session?.user.id ?? null)
             setUserEmail(session?.user.email ?? null)
         }
@@ -105,37 +110,48 @@ export default function ManageSubscriptionPage() {
                     note: row.note ?? '',
                 }
             } else {
+                // Nếu không có row (mã không tồn tại), không tạo mới nếu chưa đăng nhập
+                if (!userId) {
+                    console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
+                    return
+                }
+
+                // Tạo subscription mới nếu đang đăng nhập và chưa có
                 data = { name: '', history: {}, password: '', note: '' }
                 await supabase.from('subscriptions').insert({
                     id: code,
                     name: '',
                     owner_id: userId,
-                    data
+                    data,
+                    created_at: now.toISOString(),
+                    last_edited_at: now.toISOString(),
+                    last_edited_by: userId + '|' + userEmail,
                 })
                 setOwnerId(userId)
             }
 
-            const thisMonthData = data.history[monthKey]
-            if (!thisMonthData) {
+            // Đảm bảo có dữ liệu tháng hiện tại
+            if (!data.history[monthKey]) {
                 data.history[monthKey] = {
                     amount: 0,
                     members: []
                 }
                 setNewAmount(0)
             } else {
-                setNewAmount(thisMonthData.amount ?? 0)
+                setNewAmount(data.history[monthKey].amount ?? 0)
             }
 
             setSubscription(data)
-            if (row.owner_id === userId) {
+
+            // Xác định quyền chỉnh sửa
+            if (row?.owner_id === userId) {
                 setIsEditable(true)
-            } else {
-                // kiểm tra nếu user được mời và đã accept
+            } else if (userEmail) {
                 const { data: editor } = await supabase
                     .from('subscription_editors')
                     .select('accepted')
                     .eq('subscription_id', code)
-                    .eq('email', userEmail?.toLowerCase())
+                    .eq('email', userEmail.toLowerCase())
                     .maybeSingle()
 
                 if (editor?.accepted) {
@@ -144,10 +160,8 @@ export default function ManageSubscriptionPage() {
             }
         }
 
-        if (userId) {
-            fetchSubscription()
-        }
-    }, [code, userId])
+        fetchSubscription()
+    }, [code, userId, userEmail])
 
     useEffect(() => {
         const saveData = async () => {
@@ -330,8 +344,19 @@ export default function ManageSubscriptionPage() {
             }
         })
     }
-
-    if (!subscription || !currentMonth || !subscription.history[currentMonth]) return <div className="p-6">Đang tải dữ liệu...</div>
+    // if (checkingAuth) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center text-lg text-blue-600 animate-pulse">
+    //             🔄 Đang kiểm tra đăng nhập...
+    //         </div>
+    //     )
+    // }
+    if (!subscription || !currentMonth || !subscription.history[currentMonth])
+        return (
+            <div className="min-h-screen flex items-center justify-center text-lg text-blue-600 animate-pulse">
+                🔄 Đang kiểm tra dữ liệu...
+            </div>
+        )
 
     const current = subscription.history[currentMonth]
 
@@ -339,7 +364,7 @@ export default function ManageSubscriptionPage() {
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
-                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code} ({userEmail})</span>
+                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code}</span>
             </h1>
             <div className="flex items-center gap-3 mt-2">
                 <button
@@ -392,7 +417,7 @@ export default function ManageSubscriptionPage() {
                 />
             </div>
 
-            <div>
+            {isEditable && (<div>
                 <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
                 <input
                     disabled={!isEditable}
@@ -402,9 +427,9 @@ export default function ManageSubscriptionPage() {
                     className="px-3 py-2 border rounded w-full disabled:opacity-60"
                     placeholder="Nhập mật khẩu nếu cần"
                 />
-            </div>
+            </div>)}
 
-            <div>
+            {isEditable && (<div>
                 <label className="block mb-1 font-medium">📝 Ghi chú (tuỳ chọn)</label>
                 <textarea
                     disabled={!isEditable}
@@ -413,7 +438,7 @@ export default function ManageSubscriptionPage() {
                     className="px-3 py-2 border rounded w-full disabled:opacity-60"
                     placeholder="Thông tin thêm về subscription..."
                 />
-            </div>
+            </div>)}
 
             <div>
                 <label className="block mb-2 font-semibold text-lg">🗓️ Chọn tháng</label>
