@@ -17,44 +17,52 @@ type SubscriptionMeta = {
 }
 export default function HomePage() {
   const router = useRouter()
-  const [subs, setSubs] = useState<SubscriptionMeta[]>([])
+  const [subs, setSubs] = useState<any[]>([])
   const [qrCodeToShow, setQrCodeToShow] = useState<string | null>(null)
   const qrRef = useRef<HTMLCanvasElement | null>(null)
   const [showZoomQR, setShowZoomQR] = useState(false)
+  const [passwordPrompt, setPasswordPrompt] = useState<{ code: string; requirePassword: boolean } | null>(null)
+  const [passwordInput, setPasswordInput] = useState('')
 
   useEffect(() => {
     const fetchSubscriptions = async () => {
       const { data, error } = await supabase
         .from('subscriptions')
-        .select('id, name, created_at')
+        .select('id, name, created_at, password, note')
         .order('created_at', { ascending: false })
 
       if (error) {
         console.error('Lỗi khi lấy danh sách subscriptions:', error)
         return
       }
-
-      const result: SubscriptionMeta[] = data.map((item: any) => ({
-        code: item.id,
-        name: item.name || '(chưa đặt tên)',
-        createdAt: item.created_at
-      }))
-
-      setSubs(result)
+      setSubs(data)
     }
 
     fetchSubscriptions()
   }, [])
 
-  const handleDownloadQR = () => {
-    const canvas = qrRef.current
-    if (!canvas) return
-    const dataURL = canvas.toDataURL('image/png')
-    const link = document.createElement('a')
-    link.href = dataURL
-    link.download = `subscription-${qrCodeToShow}.png`
-    link.click()
+  const openSubscription = async (code: string) => {
+    const sub = subs.find(s => s.id === code)
+    if (sub?.password) {
+      setPasswordPrompt({ code, requirePassword: true })
+    } else {
+      router.push(`/manage/${code}`)
+    }
   }
+
+  const confirmPassword = async () => {
+    const sub = subs.find(s => s.id === passwordPrompt?.code)
+    if (!sub || !sub.password) return
+
+    if (sub.password === passwordInput) {
+      setPasswordPrompt(null)
+      setPasswordInput('')
+      router.push(`/manage/${sub.id}`)
+    } else {
+      alert('❌ Sai mật khẩu, vui lòng thử lại.')
+    }
+  }
+
 
   return (
     <main className="flex flex-col justify-center items-center space-y-10 px-6 min-h-screen">
@@ -78,25 +86,25 @@ export default function HomePage() {
               <h2 className="mb-4 font-semibold text-xl">📦 Các Subscription đã tạo</h2>
               <ul className="space-y-3">
                 {subs.map(sub => (
-                  <li key={sub.code} className="flex justify-between items-center gap-4 hover:bg-blue-50 dark:hover:bg-blue-900 shadow px-4 py-3 border rounded transition cursor-pointer" onClick={() => router.push(`/manage/${sub.code}`)}>
+                  <li key={sub.id} className="flex justify-between items-center gap-4 hover:bg-blue-50 dark:hover:bg-blue-900 shadow px-4 py-3 border rounded transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
                     <div className="flex-1">
-                      <div className="font-mono text-gray-500 text-sm">Mã: {sub.code}</div>
+                      <div className="font-mono text-gray-500 text-sm">Mã: {sub.id}</div>
                       <div className="font-semibold text-lg">{sub.name}</div>
-                      {sub.createdAt && (
+                      {sub.created_at && (
                         <div className="mt-1 text-gray-500 text-sm">
-                          📅 Ngày đăng ký: {new Date(sub.createdAt).toLocaleDateString('vi-VN')}
+                          📅 Ngày đăng ký: {new Date(sub.created_at).toLocaleDateString('vi-VN')}
                         </div>
                       )}
                     </div>
                     <QRCodeCanvas
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${sub.code}`}
+                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${sub.id}`}
                       size={64}
                       bgColor="#ffffff"
                       fgColor="#000000"
                       className="rounded cursor-zoom-in"
                       onClick={(e) => {
                         e.stopPropagation()
-                        setQrCodeToShow(sub.code)
+                        setQrCodeToShow(sub.id)
                       }}
                     />
                   </li>
@@ -169,6 +177,47 @@ export default function HomePage() {
           />
         </div>
       )}
+
+      {/* Popup xác thực mật khẩu */}
+      {passwordPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl">🔐</span>
+              <h2 className="text-xl font-bold">Nhập mật khẩu để mở Subscription</h2>
+            </div>
+
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              Subscription <span className="font-mono text-blue-700 dark:text-blue-300">{passwordPrompt.code}</span> đang được bảo vệ.
+            </p>
+
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={e => setPasswordInput(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập mật khẩu..."
+              autoFocus
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setPasswordPrompt(null)}
+                className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={confirmPassword}
+                className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
+              >
+                Mở khoá
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </main>
   )
 }

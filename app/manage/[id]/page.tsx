@@ -21,10 +21,12 @@ type MonthlyData = {
     members: Member[]
 }
 
-// Tổng subscription lưu trong localStorage
+// Tổng subscription lưu trên Supabase
 type SubscriptionData = {
     name: string
     history: Record<string, MonthlyData>
+    password?: string
+    note?: string
 }
 
 export default function ManageSubscriptionPage() {
@@ -68,10 +70,13 @@ export default function ManageSubscriptionPage() {
             let data: SubscriptionData
 
             if (row) {
-                data = row.data
+                data = {
+                    ...row.data,
+                    password: row.password ?? '',
+                    note: row.note ?? '',
+                }
             } else {
-                data = { name: '', history: {} }
-                // Tạo subscription mới nếu chưa có
+                data = { name: '', history: {}, password: '', note: '' }
                 await supabase.from('subscriptions').insert({
                     id: code,
                     name: '',
@@ -79,8 +84,23 @@ export default function ManageSubscriptionPage() {
                 })
             }
 
-            if (!data.history[monthKey]) {
-                data.history[monthKey] = { amount: 0, members: [] }
+            // Lấy dữ liệu của tháng hiện tại từ subscription.history
+            const thisMonthData = data.history[monthKey]
+
+            // Nếu chưa có dữ liệu cho tháng hiện tại thì khởi tạo rỗng
+            if (!thisMonthData) {
+                // Gán mặc định: số tiền là 0 và không có thành viên
+                data.history[monthKey] = {
+                    amount: 0,
+                    members: []
+                }
+
+                // Cập nhật state newAmount để hiển thị đúng trong input tổng tiền
+                setNewAmount(0)
+            } else {
+                // Nếu đã có dữ liệu cho tháng này, lấy số tiền (amount) đã lưu
+                // Nếu amount là undefined hoặc null, fallback về 0
+                setNewAmount(thisMonthData.amount ?? 0)
             }
 
             setSubscription(data)
@@ -97,6 +117,8 @@ export default function ManageSubscriptionPage() {
                 .from('subscriptions')
                 .update({
                     name: subscription.name,
+                    password: subscription.password || '',
+                    note: subscription.note || '',
                     data: subscription
                 })
                 .eq('id', code)
@@ -110,7 +132,13 @@ export default function ManageSubscriptionPage() {
         setSubscription(prev => prev ? { ...prev, name } : null)
     }
 
+    const handlePasswordChange = (password: string) => {
+        setSubscription(prev => prev ? { ...prev, password } : null)
+    }
 
+    const handleNoteChange = (note: string) => {
+        setSubscription(prev => prev ? { ...prev, note } : null)
+    }
 
     const handleDeleteSubscription = async () => {
         if (!window.confirm('Bạn có chắc muốn huỷ subscription này không?')) return
@@ -283,17 +311,49 @@ export default function ManageSubscriptionPage() {
             </div>
 
             <div>
-                <label className="block mb-1 font-medium">🗓️ Chọn tháng</label>
+                <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
+                <input
+                    type="password"
+                    value={subscription.password || ''}
+                    onChange={e => handlePasswordChange(e.target.value)}
+                    className="px-3 py-2 border rounded w-full"
+                    placeholder="Nhập mật khẩu nếu cần"
+                />
+            </div>
+
+            <div>
+                <label className="block mb-1 font-medium">📝 Ghi chú (tuỳ chọn)</label>
+                <textarea
+                    value={subscription.note || ''}
+                    onChange={e => handleNoteChange(e.target.value)}
+                    className="px-3 py-2 border rounded w-full"
+                    placeholder="Thông tin thêm về subscription..."
+                />
+            </div>
+
+            <div>
+                <label className="block mb-2 font-semibold text-lg">🗓️ Chọn tháng</label>
                 <div className="flex flex-wrap gap-2">
-                    {Object.keys(subscription.history).map(month => (
-                        <button
-                            key={month}
-                            onClick={() => switchMonth(month)}
-                            className={`px-3 py-1 rounded ${month === currentMonth ? 'bg-blue-900 text-white' : 'bg-gray-500 text-white'}`}
-                        >
-                            {month}
-                        </button>
-                    ))}
+                    {Object.keys(subscription.history)
+                        .sort((a, b) => {
+                            // Chuyển định dạng "MM/YYYY" thành Date để so sánh
+                            const [aMonth, aYear] = a.split('/').map(Number)
+                            const [bMonth, bYear] = b.split('/').map(Number)
+                            return new Date(aYear, aMonth - 1).getTime() - new Date(bYear, bMonth - 1).getTime()
+                        })
+                        .map(month => (
+                            <button
+                                key={month}
+                                onClick={() => switchMonth(month)}
+                                className={`flex items-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border 
+            ${month === currentMonth
+                                        ? 'bg-blue-700 text-white border-blue-900 scale-105'
+                                        : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-zinc-600 border-gray-300'
+                                    }`}
+                            >
+                                📅 {month}
+                            </button>
+                        ))}
                 </div>
             </div>
 
