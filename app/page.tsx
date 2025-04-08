@@ -8,6 +8,7 @@ import { SiThreads } from 'react-icons/si'
 import { QRCodeCanvas } from 'qrcode.react'
 import ThemeToggleButton from './components/ThemeToggleButton'
 import vietqr from '../vietqr.gif'
+import { supabase } from './lib/supabase'
 
 type SubscriptionMeta = {
   code: string
@@ -22,22 +23,27 @@ export default function HomePage() {
   const [showZoomQR, setShowZoomQR] = useState(false)
 
   useEffect(() => {
-    const list = []
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
-      if (key && key.startsWith('subscription:')) {
-        const code = key.replace('subscription:', '')
-        try {
-          const data = JSON.parse(localStorage.getItem(key) || '{}')
-          list.push({
-            code,
-            name: String(data.name || '(chưa đặt tên)'),
-            createdAt: data.createdAt ? String(data.createdAt) : null,
-          })
-        } catch { }
+    const fetchSubscriptions = async () => {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('id, name, created_at')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Lỗi khi lấy danh sách subscriptions:', error)
+        return
       }
+
+      const result: SubscriptionMeta[] = data.map((item: any) => ({
+        code: item.id,
+        name: item.name || '(chưa đặt tên)',
+        createdAt: item.created_at
+      }))
+
+      setSubs(result)
     }
-    setSubs(list)
+
+    fetchSubscriptions()
   }, [])
 
   const handleDownloadQR = () => {
@@ -83,7 +89,7 @@ export default function HomePage() {
                       )}
                     </div>
                     <QRCodeCanvas
-                      value={`${window.location.origin}/manage/${sub.code}`}
+                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${sub.code}`}
                       size={64}
                       bgColor="#ffffff"
                       fgColor="#000000"
@@ -105,19 +111,18 @@ export default function HomePage() {
           <div className="space-y-4 text-center">
             <p className="">
               💬 Hiện tại mình chưa có kinh phí để thuê server, vì vậy toàn bộ dữ liệu subscription đang được lưu
-              <strong> cục bộ trên thiết bị của bạn</strong>. Dữ liệu này hoàn toàn riêng tư và không ai khác có thể truy cập.
+              <strong> trên một server miễn phí (Supabase) và có giới hạn</strong>. Tuy nhiên dữ liệu này hoàn toàn riêng tư và không ai khác có thể truy cập.
             </p>
             <p className="">
-              ⚠️ Tuy nhiên, nếu bạn cài lại máy hoặc mất thiết bị thì dữ liệu sẽ bị mất. Nếu có kinh phí triển khai server và database,
-              hệ thống sẽ lưu trữ vĩnh viễn và đồng bộ mọi lúc, mọi nơi.
+              ⚠️ Nếu có kinh phí triển khai server và database, hệ thống sẽ lưu trữ vĩnh viễn và đồng bộ mọi lúc, mọi nơi.
             </p>
             <p className="font-semibold">
               🙏 Nếu bạn thấy dự án hữu ích, hãy ủng hộ một chút chi phí để mình có thể duy trì và phát triển thêm nhé!
             </p>
             <hr className="my-4 border-gray-300 dark:border-zinc-600" />
             <p className="dark:text-neutral-400 text-sm italic">
-              💬 Currently, due to limited budget, I don't have a server — so your data is stored locally and is fully private.
-              However, it will be lost if you reinstall or lose your device. A database would allow permanent, secure storage.
+              💬 Currently, due to limited budget, I don't have a server — so your data is stored supabase (no-free tier) and is fully private.
+              . A database would allow permanent, secure storage.
               If you find this tool useful, consider supporting this project!
             </p>
           </div>

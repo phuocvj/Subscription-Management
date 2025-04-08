@@ -1,6 +1,6 @@
 // Quản lý subscription theo tháng với chức năng tạo 12 tháng tiếp theo
 'use client'
-
+import { supabase } from '@/app/lib/supabase'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
@@ -50,57 +50,72 @@ export default function ManageSubscriptionPage() {
     }, [])
 
     useEffect(() => {
-        const now = new Date()
-        const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-        setCurrentMonth(monthKey)
+        const fetchSubscription = async () => {
+            const { data: row, error } = await supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('id', code)
+                .single()
 
-        const saved = localStorage.getItem(`subscription:${code}`)
-        let data: SubscriptionData
+            if (error && error.code !== 'PGRST116') {
+                console.error('Lỗi khi load subscription:', error)
+            }
 
-        if (saved) {
-            data = JSON.parse(saved)
-        } else {
-            data = { name: '', history: {} }
+            const now = new Date()
+            const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+            setCurrentMonth(monthKey)
+
+            let data: SubscriptionData
+
+            if (row) {
+                data = row.data
+            } else {
+                data = { name: '', history: {} }
+                // Tạo subscription mới nếu chưa có
+                await supabase.from('subscriptions').insert({
+                    id: code,
+                    name: '',
+                    data
+                })
+            }
+
+            if (!data.history[monthKey]) {
+                data.history[monthKey] = { amount: 0, members: [] }
+            }
+
+            setSubscription(data)
         }
 
-        if (!data.history[monthKey]) {
-            data.history[monthKey] = { amount: 0, members: [] }
-        }
-
-        localStorage.setItem(`subscription:${code}`, JSON.stringify(data))
-        setSubscription(data)
+        fetchSubscription()
     }, [code])
 
     useEffect(() => {
-        if (subscription) {
-            localStorage.setItem(`subscription:${code}`, JSON.stringify(subscription))
+        const saveData = async () => {
+            if (!subscription) return
+
+            await supabase
+                .from('subscriptions')
+                .update({
+                    name: subscription.name,
+                    data: subscription
+                })
+                .eq('id', code)
         }
+
+        saveData()
     }, [subscription, code])
+
 
     const handleNameChange = (name: string) => {
         setSubscription(prev => prev ? { ...prev, name } : null)
     }
 
-    const handleSetAmount = () => {
-        if (!subscription) return
-        const members = subscription.history[currentMonth]?.members || []
-        const perPerson = members.length > 0 ? +(newAmount / members.length).toFixed(0) : 0
-        const updatedMembers = members.map(m => ({ ...m, amount: perPerson }))
-        setSubscription({
-            ...subscription,
-            history: {
-                ...subscription.history,
-                [currentMonth]: {
-                    amount: newAmount,
-                    members: updatedMembers
-                }
-            }
-        })
-    }
 
-    const handleDeleteSubscription = () => {
+
+    const handleDeleteSubscription = async () => {
         if (!window.confirm('Bạn có chắc muốn huỷ subscription này không?')) return
-        localStorage.removeItem(`subscription:${code}`)
+        // localStorage.removeItem(`subscription:${code}`)
+        await supabase.from('subscriptions').delete().eq('id', code)
         router.push('/')
     }
 
