@@ -89,7 +89,12 @@ export default function HomePage() {
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    try {
+      await supabase.auth.signOut({ scope: 'global' })
+    } catch (err) {
+      console.warn('⚠️ Logout global failed, fallback to local')
+      await supabase.auth.signOut({ scope: 'local' })
+    }
   }
 
   const openSubscription = async (code: string) => {
