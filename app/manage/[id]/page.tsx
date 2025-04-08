@@ -39,8 +39,17 @@ export default function ManageSubscriptionPage() {
     const [newAmount, setNewAmount] = useState<number>(0)
     const [showCloneModal, setShowCloneModal] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
+    const [userId, setUserId] = useState<string | null>(null)
+
     const router = useRouter()
 
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession()
+            setUserId(session?.user.id ?? null)
+        }
+        fetchUser()
+    }, [])
     // Cập nhật class dark/light từ localStorage
     useEffect(() => {
         const theme = localStorage.getItem('theme')
@@ -80,34 +89,29 @@ export default function ManageSubscriptionPage() {
                 await supabase.from('subscriptions').insert({
                     id: code,
                     name: '',
+                    owner_id: userId,
                     data
                 })
             }
 
-            // Lấy dữ liệu của tháng hiện tại từ subscription.history
             const thisMonthData = data.history[monthKey]
-
-            // Nếu chưa có dữ liệu cho tháng hiện tại thì khởi tạo rỗng
             if (!thisMonthData) {
-                // Gán mặc định: số tiền là 0 và không có thành viên
                 data.history[monthKey] = {
                     amount: 0,
                     members: []
                 }
-
-                // Cập nhật state newAmount để hiển thị đúng trong input tổng tiền
                 setNewAmount(0)
             } else {
-                // Nếu đã có dữ liệu cho tháng này, lấy số tiền (amount) đã lưu
-                // Nếu amount là undefined hoặc null, fallback về 0
                 setNewAmount(thisMonthData.amount ?? 0)
             }
 
             setSubscription(data)
         }
 
-        fetchSubscription()
-    }, [code])
+        if (userId) {
+            fetchSubscription()
+        }
+    }, [code, userId])
 
     useEffect(() => {
         const saveData = async () => {
@@ -119,7 +123,8 @@ export default function ManageSubscriptionPage() {
                     name: subscription.name,
                     password: subscription.password || '',
                     note: subscription.note || '',
-                    data: subscription
+                    data: subscription,
+                    owner_id: userId
                 })
                 .eq('id', code)
         }
