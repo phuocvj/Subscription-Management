@@ -532,36 +532,47 @@ export default function ManageSubscriptionPage() {
                     {subscription.history[currentMonth].members.map((m, i) => (
                         <div
                             key={i}
-                            className={`flex items-center justify-between gap-4 p-3 rounded-lg border shadow-sm transition duration-300
-                ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''}`}
+                            className={`flex flex-col gap-2 p-3 rounded-lg border shadow-sm transition duration-300
+                          ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''}`}
                         >
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => togglePaid(i)} disabled={!isEditable}>
-                                    {m.paid ? <FaCheckCircle className="text-green-500" /> : <FaRegCircle className="text-gray-400" />}
-                                </button>
-                                <div>
-                                    <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
-                                    <div className="text-sm">{m.amount.toLocaleString()}₫</div>
+                            <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => togglePaid(i)} disabled={!isEditable}>
+                                        {m.paid ? <FaCheckCircle className="text-green-500" /> : <FaRegCircle className="text-gray-400" />}
+                                    </button>
+                                    <div>
+                                        <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
+                                        <div className="text-sm">{m.amount.toLocaleString('en-US')}₫</div>
+                                    </div>
                                 </div>
+                                {isEditable && (
+                                    <button
+                                        onClick={() => removeMember(i)}
+                                        className="text-red-500 hover:text-red-700"
+                                        title="Xoá thành viên"
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <input
+
+                            {/* 👇 Đây là phần mới: note nằm ở dưới, full width */}
+                            {isEditable ? (
+                                <textarea
                                     disabled={!isEditable}
-                                    type="text"
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
-                                    placeholder="Ghi chú"
-                                    className="px-2 py-1 border rounded w-full text-sm disabled:opacity-60"
+                                    placeholder="Ghi chú..."
+                                    className="mt-2 px-3 py-2 rounded border w-full text-sm resize-y disabled:opacity-60"
+                                    rows={2}
                                 />
-                                <button
-                                    disabled={!isEditable}
-                                    onClick={() => removeMember(i)}
-                                    className="text-red-500 hover:text-red-700"
-                                    title="Xoá thành viên"
-                                >
-                                    <FaTrash />
-                                </button>
-                            </div>
+                            ) : (
+                                m.note && (
+                                    <div className="mt-2 text-sm italic text-gray-500">
+                                        📝 {m.note}
+                                    </div>
+                                )
+                            )}
                         </div>
                     ))}
                 </div>
