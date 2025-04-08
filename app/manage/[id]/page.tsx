@@ -40,8 +40,11 @@ export default function ManageSubscriptionPage() {
     const [showCloneModal, setShowCloneModal] = useState(false)
     const [highlightIndex, setHighlightIndex] = useState<number | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
+    const [ownerId, setOwnerId] = useState<string | null>(null)
 
     const router = useRouter()
+
+    const isEditable = userId && ownerId && userId === ownerId
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -49,15 +52,6 @@ export default function ManageSubscriptionPage() {
             setUserId(session?.user.id ?? null)
         }
         fetchUser()
-    }, [])
-    // Cập nhật class dark/light từ localStorage
-    useEffect(() => {
-        const theme = localStorage.getItem('theme')
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark')
-        } else {
-            document.documentElement.classList.remove('dark')
-        }
     }, [])
 
     useEffect(() => {
@@ -79,6 +73,7 @@ export default function ManageSubscriptionPage() {
             let data: SubscriptionData
 
             if (row) {
+                setOwnerId(row.owner_id || null)
                 data = {
                     ...row.data,
                     password: row.password ?? '',
@@ -92,6 +87,7 @@ export default function ManageSubscriptionPage() {
                     owner_id: userId,
                     data
                 })
+                setOwnerId(userId)
             }
 
             const thisMonthData = data.history[monthKey]
@@ -115,7 +111,7 @@ export default function ManageSubscriptionPage() {
 
     useEffect(() => {
         const saveData = async () => {
-            if (!subscription) return
+            if (!subscription || !isEditable) return
 
             await supabase
                 .from('subscriptions')
@@ -130,30 +126,33 @@ export default function ManageSubscriptionPage() {
         }
 
         saveData()
-    }, [subscription, code])
+    }, [subscription, code, userId, isEditable])
 
-
+    // Tất cả các hàm handle* cũng cần thêm điều kiện isEditable
     const handleNameChange = (name: string) => {
+        if (!isEditable) return
         setSubscription(prev => prev ? { ...prev, name } : null)
     }
 
     const handlePasswordChange = (password: string) => {
+        if (!isEditable) return
         setSubscription(prev => prev ? { ...prev, password } : null)
     }
 
     const handleNoteChange = (note: string) => {
+        if (!isEditable) return
         setSubscription(prev => prev ? { ...prev, note } : null)
     }
 
     const handleDeleteSubscription = async () => {
+        if (!isEditable) return
         if (!window.confirm('Bạn có chắc muốn huỷ subscription này không?')) return
-        // localStorage.removeItem(`subscription:${code}`)
         await supabase.from('subscriptions').delete().eq('id', code)
         router.push('/')
     }
 
     const addMember = () => {
-        if (!subscription || newMember.trim() === '') return
+        if (!subscription || newMember.trim() === '' || !isEditable) return
 
         const currentData = subscription.history[currentMonth] || { amount: 0, members: [] }
         const amount = currentData.amount
@@ -189,7 +188,7 @@ export default function ManageSubscriptionPage() {
     }
 
     const removeMember = (index: number) => {
-        if (!subscription) return
+        if (!subscription || !isEditable) return
         const month = subscription.history[currentMonth]
         if (!month) return
 
@@ -213,7 +212,7 @@ export default function ManageSubscriptionPage() {
     }
 
     const togglePaid = (index: number) => {
-        if (!subscription) return
+        if (!subscription || !isEditable) return
         const month = subscription.history[currentMonth]
         if (!month) return
         const updatedMembers = [...month.members]
@@ -231,7 +230,7 @@ export default function ManageSubscriptionPage() {
     }
 
     const updateNote = (index: number, value: string) => {
-        if (!subscription) return
+        if (!subscription || !isEditable) return
         const month = subscription.history[currentMonth]
         if (!month) return
         const updatedMembers = [...month.members]
@@ -252,7 +251,7 @@ export default function ManageSubscriptionPage() {
         setCurrentMonth(month)
         setNewAmount(0)
         setNewMember('')
-        if (subscription && !subscription.history[month]) {
+        if (subscription && !subscription.history[month] && isEditable) {
             setSubscription({
                 ...subscription,
                 history: {
@@ -264,7 +263,7 @@ export default function ManageSubscriptionPage() {
     }
 
     const handleCloneNext12Months = (newMonths: Record<string, Member[]>) => {
-        if (!subscription) return
+        if (!subscription || !isEditable) return
 
         const currentAmount = subscription.history[currentMonth]?.amount || 0
 
@@ -291,6 +290,7 @@ export default function ManageSubscriptionPage() {
 
     const current = subscription.history[currentMonth]
 
+    // phần render mới với phân quyền isEditable
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
@@ -308,9 +308,10 @@ export default function ManageSubscriptionPage() {
             <div>
                 <label className="block mb-1 font-medium">📛 Tên Subscription</label>
                 <input
+                    disabled={!isEditable}
                     value={subscription.name}
                     onChange={e => handleNameChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full"
+                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
                     placeholder="VD: ChatGPT, Netflix..."
                 />
             </div>
@@ -318,10 +319,11 @@ export default function ManageSubscriptionPage() {
             <div>
                 <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
                 <input
+                    disabled={!isEditable}
                     type="password"
                     value={subscription.password || ''}
                     onChange={e => handlePasswordChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full"
+                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
                     placeholder="Nhập mật khẩu nếu cần"
                 />
             </div>
@@ -329,9 +331,10 @@ export default function ManageSubscriptionPage() {
             <div>
                 <label className="block mb-1 font-medium">📝 Ghi chú (tuỳ chọn)</label>
                 <textarea
+                    disabled={!isEditable}
                     value={subscription.note || ''}
                     onChange={e => handleNoteChange(e.target.value)}
-                    className="px-3 py-2 border rounded w-full"
+                    className="px-3 py-2 border rounded w-full disabled:opacity-60"
                     placeholder="Thông tin thêm về subscription..."
                 />
             </div>
@@ -341,17 +344,16 @@ export default function ManageSubscriptionPage() {
                 <div className="flex flex-wrap gap-2">
                     {Object.keys(subscription.history)
                         .sort((a, b) => {
-                            // Chuyển định dạng "MM/YYYY" thành Date để so sánh
-                            const [aMonth, aYear] = a.split('/').map(Number)
-                            const [bMonth, bYear] = b.split('/').map(Number)
-                            return new Date(aYear, aMonth - 1).getTime() - new Date(bYear, bMonth - 1).getTime()
+                            const [aM, aY] = a.split('/').map(Number)
+                            const [bM, bY] = b.split('/').map(Number)
+                            return new Date(aY, aM - 1).getTime() - new Date(bY, bM - 1).getTime()
                         })
                         .map(month => (
                             <button
                                 key={month}
                                 onClick={() => switchMonth(month)}
-                                className={`flex items-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border 
-            ${month === currentMonth
+                                className={`flex items-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border
+                  ${month === currentMonth
                                         ? 'bg-blue-700 text-white border-blue-900 scale-105'
                                         : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-zinc-600 border-gray-300'
                                     }`}
@@ -366,6 +368,7 @@ export default function ManageSubscriptionPage() {
                 <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                 <input
                     type="number"
+                    disabled={!isEditable}
                     value={newAmount === 0 ? '' : newAmount}
                     onChange={e => {
                         const amount = Number(e.target.value)
@@ -388,9 +391,8 @@ export default function ManageSubscriptionPage() {
                             })
                         }
                     }}
-
                     placeholder="Nhập số tiền"
-                    className="px-4 py-2 border rounded w-full text-base"
+                    className="px-4 py-2 border rounded w-full text-base disabled:opacity-60"
                 />
             </div>
 
@@ -398,17 +400,18 @@ export default function ManageSubscriptionPage() {
                 <label className="block mb-1 font-medium">👥 Thêm thành viên</label>
                 <div className="flex gap-2">
                     <input
+                        disabled={!isEditable}
                         value={newMember}
                         onChange={e => setNewMember(e.target.value)}
                         placeholder="Tên thành viên"
-                        className="flex-1 px-4 py-2 border rounded-md text-base"
+                        className="flex-1 px-4 py-2 border rounded-md text-base disabled:opacity-60"
                     />
                     <button
+                        disabled={!isEditable}
                         onClick={addMember}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white text-base"
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-white text-base disabled:opacity-50"
                     >
-                        <FaPlus className="text-lg" />
-                        Thêm
+                        <FaPlus className="text-lg" /> Thêm
                     </button>
                 </div>
             </div>
@@ -418,39 +421,37 @@ export default function ManageSubscriptionPage() {
                     <FaUserFriends className="text-green-600" /> Danh sách tháng {currentMonth}
                 </h2>
                 <div className="flex justify-between items-center mb-2 text-gray-600 text-sm">
-                    <span>👥 Tổng thành viên: {current.members.length}</span>
-                    <span>💸 Đã thu: {current.members.filter(m => m.paid).reduce((sum, m) => sum + m.amount, 0).toLocaleString()}₫</span>
+                    <span>👥 Tổng thành viên: {subscription.history[currentMonth].members.length}</span>
+                    <span>💸 Đã thu: {subscription.history[currentMonth].members.filter(m => m.paid).reduce((sum, m) => sum + m.amount, 0).toLocaleString()}₫</span>
                 </div>
 
                 <div className="gap-3 grid">
-                    {current.members.map((m, i) => (
+                    {subscription.history[currentMonth].members.map((m, i) => (
                         <div
                             key={i}
-                            className={`flex items-center justify-between gap-4 p-3 rounded-lg border shadow-sm transition duration-300 ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''} ${m.paid ? '' : ''}`}
+                            className={`flex items-center justify-between gap-4 p-3 rounded-lg border shadow-sm transition duration-300
+                ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''}`}
                         >
                             <div className="flex items-center gap-3">
-                                <button onClick={() => togglePaid(i)} title="Đã thanh toán?">
-                                    {m.paid ? (
-                                        <FaCheckCircle className="text-green-500" />
-                                    ) : (
-                                        <FaRegCircle className="text-gray-400" />
-                                    )}
+                                <button onClick={() => togglePaid(i)} disabled={!isEditable}>
+                                    {m.paid ? <FaCheckCircle className="text-green-500" /> : <FaRegCircle className="text-gray-400" />}
                                 </button>
                                 <div>
                                     <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
                                     <div className="text-sm">{m.amount.toLocaleString()}₫</div>
                                 </div>
                             </div>
-
                             <div className="flex items-center gap-2">
                                 <input
+                                    disabled={!isEditable}
                                     type="text"
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú"
-                                    className="px-2 py-1 border rounded w-full text-sm"
+                                    className="px-2 py-1 border rounded w-full text-sm disabled:opacity-60"
                                 />
                                 <button
+                                    disabled={!isEditable}
                                     onClick={() => removeMember(i)}
                                     className="text-red-500 hover:text-red-700"
                                     title="Xoá thành viên"
@@ -461,27 +462,30 @@ export default function ManageSubscriptionPage() {
                         </div>
                     ))}
                 </div>
-                <div className="flex gap-4 mt-6">
-                    <button
-                        onClick={() => setShowCloneModal(true)}
-                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
-                    >
-                        <FaMagic /> Tạo 12 tháng tiếp theo
-                    </button>
 
-                    <button
-                        onClick={handleDeleteSubscription}
-                        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
-                    >
-                        <FaTrashAlt /> Huỷ subscription này
-                    </button>
-                </div>
+                {isEditable && (
+                    <div className="flex gap-4 mt-6">
+                        <button
+                            onClick={() => setShowCloneModal(true)}
+                            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
+                        >
+                            <FaMagic /> Tạo 12 tháng tiếp theo
+                        </button>
+
+                        <button
+                            onClick={handleDeleteSubscription}
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
+                        >
+                            <FaTrashAlt /> Huỷ subscription này
+                        </button>
+                    </div>
+                )}
             </div>
 
             {showCloneModal && (
                 <CloneNext12MonthsModal
                     currentMonth={currentMonth}
-                    members={current?.members ?? []}
+                    members={subscription.history[currentMonth]?.members ?? []}
                     onClose={() => setShowCloneModal(false)}
                     onCreate={handleCloneNext12Months}
                 />
