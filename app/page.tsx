@@ -39,16 +39,16 @@ export default function HomePage() {
         .eq('owner_id', session.user.id)
 
       // 2. Lấy các subscription mà user được mời làm editor
-      const { data: invitedEditors = [], error: invitedError } = await supabase
+      const { data: invitedEditors = [] as any[], error: invitedError } = await supabase
         .from('subscription_editors')
-        .select('subscription_id, email')
+        .select('subscription_id, email, inviter_email') // 👈 đừng quên lấy inviter_email nếu bạn dùng
         .eq('email', session.user.email.toLowerCase())
         .eq('accepted', true)
 
       let invitedSubs: any[] = []
       let inviterMap: Record<string, string> = {}
 
-      if (invitedEditors?.length > 0) {
+      if (invitedEditors != null && invitedEditors?.length > 0) {
         const ids = invitedEditors.map(i => i.subscription_id)
         const { data: extraSubs, error: extraErr } = await supabase
           .from('subscriptions')
