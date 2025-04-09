@@ -20,10 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans">
+       
         <ThemeProvider>
-          <div className="top-4 right-4 absolute">
-            <ThemeToggleButton />
-          </div>
+
           {children}
         </ThemeProvider>
       </body>

@@ -7,6 +7,7 @@ import { FaPlusCircle, FaFolderOpen, FaGoogle, FaFacebookSquare, FaEnvelope, FaS
 import { SiThreads } from 'react-icons/si'
 import { QRCodeCanvas } from 'qrcode.react'
 import { supabase } from './lib/supabase'
+import ThemeToggleButton from './components/ThemeToggleButton'
 
 export default function HomePage() {
   const router = useRouter()
@@ -96,7 +97,7 @@ export default function HomePage() {
   }
 
   const openSubscription = async (code: string) => {
-      router.push(`/manage/${code}`)
+    router.push(`/manage/${code}`)
   }
 
 
@@ -150,7 +151,9 @@ export default function HomePage() {
               <FaSignOutAlt />
               Đăng xuất
             </button>
+
           </div>
+          <ThemeToggleButton />
         </div>
       ) : (
         <div className="flex justify-center">
@@ -235,7 +238,7 @@ export default function HomePage() {
         </div>
       )}
 
-     
+
     </main>
   )
 }
