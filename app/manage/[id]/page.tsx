@@ -483,15 +483,6 @@ export default function ManageSubscriptionPage() {
             }
         })
     }
-
-    if (!subscription || !currentMonth || !subscription.history[currentMonth])
-        return (
-            <div className="flex justify-center items-center min-h-screen text-blue-600 text-lg animate-pulse">
-                🔄 Đang kiểm tra dữ liệu...
-            </div>
-        )
-
-    const current = subscription.history[currentMonth]
     if (showPasswordPrompt) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
@@ -557,6 +548,15 @@ export default function ManageSubscriptionPage() {
             </div>
         )
     }
+    if (!subscription || !currentMonth || !subscription.history[currentMonth])
+        return (
+            <div className="flex justify-center items-center min-h-screen text-blue-600 text-lg animate-pulse">
+                🔄 Đang kiểm tra dữ liệu...
+            </div>
+        )
+
+    const current = subscription.history[currentMonth]
+
     // phần render mới với phân quyền isEditable
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
