@@ -126,15 +126,27 @@ export default function HomePage() {
       {session ? (
         <div className="flex flex-col items-center gap-3">
           <div className="flex flex-wrap justify-center gap-6">
-            <button onClick={() => router.push('/create')} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition">
-              <FaPlusCircle size={24} /> Create A Subscription
+            <button
+              onClick={() => router.push('/create')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition"
+            >
+              <FaPlusCircle size={24} />
+              <span className="hidden sm:inline">Create A Subscription</span>
             </button>
-            <button onClick={() => router.push('/open')} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition">
-              <FaFolderOpen size={24} /> Open A Subscription
+
+            <button
+              onClick={() => router.push('/open')}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition"
+            >
+              <FaFolderOpen size={24} />
+              <span className="hidden sm:inline">Open A Subscription</span>
             </button>
           </div>
-          <div className="mt-2 text-sm  flex flex-col items-center">
-            <span className="mb-1">👋 Xin chào, <strong>{session.user.user_metadata.full_name} ({session.user.user_metadata.email})</strong></span>
+
+          <div className="mt-2 text-sm flex flex-col items-center text-center">
+            <span className="mb-1 text-center">
+              👋 Xin chào, <strong>{session.user.user_metadata.full_name} ({session.user.user_metadata.email})</strong>
+            </span>
             <button
               onClick={signOut}
               className="flex items-center gap-2 px-4 py-2 rounded-md text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-zinc-800 hover:bg-blue-200 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
