@@ -2,42 +2,97 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useEffect, useState } from 'react'
-import { FaSun, FaMoon } from 'react-icons/fa'
+import { FaSun, FaMoon, FaAdjust } from 'react-icons/fa'
 
-type ThemeMode = 'light' | 'dark'
+type ThemeMode = 'light' | 'dark' | 'auto'
 
 export default function ThemeToggleButton() {
-  const [theme, setTheme] = useState<ThemeMode>('light')
+  const [theme, setTheme] = useState<ThemeMode>('auto')
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
   const [showPopup, setShowPopup] = useState(false)
 
-  const applyTheme = (mode: ThemeMode) => {
-    document.documentElement.classList.toggle('dark', mode === 'dark')
+  const getSystemTheme = (): 'light' | 'dark' => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+    return 'light'
   }
 
+  // Lấy theme từ localStorage khi mounted
   useEffect(() => {
-    const saved = (localStorage.getItem('theme') as ThemeMode) || 'light'
+    const saved = (localStorage.getItem('theme') as ThemeMode) || 'auto'
     setTheme(saved)
-    applyTheme(saved)
   }, [])
 
-  const nextTheme = (current: ThemeMode): ThemeMode =>
-    current === 'light' ? 'dark' : 'light'
+  // Áp dụng theme khi thay đổi theme hoặc mounted
+  useEffect(() => {
+    const apply = () => {
+      const appliedTheme = theme === 'auto' ? getSystemTheme() : theme
+      setResolvedTheme(appliedTheme)
+      document.documentElement.classList.toggle('dark', appliedTheme === 'dark')
+    }
+
+    apply()
+  }, [theme])
+
+  // Theo dõi thay đổi hệ thống nếu đang là auto
+  useEffect(() => {
+    if (theme !== 'auto' || typeof window === 'undefined') return
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const systemChangeListener = (e: MediaQueryListEvent) => {
+      const newTheme = e.matches ? 'dark' : 'light'
+      setResolvedTheme(newTheme)
+      document.documentElement.classList.toggle('dark', newTheme === 'dark')
+    }
+
+    // Lắng nghe sự kiện
+    mediaQuery.addEventListener('change', systemChangeListener)
+
+    // Cleanup
+    return () => {
+      mediaQuery.removeEventListener('change', systemChangeListener)
+    }
+  }, [theme])
+
+  const nextTheme = (current: ThemeMode): ThemeMode => {
+    switch (current) {
+      case 'light':
+        return 'dark'
+      case 'dark':
+        return 'auto'
+      default:
+        return 'light'
+    }
+  }
 
   const toggleTheme = () => {
     const newTheme = nextTheme(theme)
     setTheme(newTheme)
     localStorage.setItem('theme', newTheme)
-    applyTheme(newTheme)
     setShowPopup(true)
     setTimeout(() => setShowPopup(false), 1200)
   }
 
   const renderIcon = () => {
-    return theme === 'light' ? <FaSun /> : <FaMoon />
+    switch (theme) {
+      case 'light':
+        return <FaSun />
+      case 'dark':
+        return <FaMoon />
+      default:
+        return <FaAdjust />
+    }
   }
 
   const renderPopupIcon = () => {
-    return theme === 'light' ? <FaSun size={100} /> : <FaMoon size={100} />
+    switch (resolvedTheme) {
+      case 'light':
+        return <FaSun size={100} />
+      case 'dark':
+        return <FaMoon size={100} />
+    }
   }
 
   return (
