@@ -105,7 +105,7 @@ export default function HomePage() {
 
   return (
     <main className="relative flex flex-col justify-center items-center space-y-10 px-6 min-h-screen overflow-hidden">
-      <div className="absolute inset-0 -z-10 animate-gradient bg-gradient-to-br from-green-300-500 via-white to-blue-900 opacity-20 dark:opacity-10 blur-3xl" />
+      <div className="absolute inset-0 -z-10 animate-gradient bg-gradient-to-br  from-blue-300 via-pink-200 to-yellow-200 opacity-20 dark:opacity-10 blur-3xl" />
         <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
         {session ? (
           <div className="flex flex-col items-center gap-3">
