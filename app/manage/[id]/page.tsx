@@ -477,12 +477,16 @@ export default function ManageSubscriptionPage() {
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
-                <FaLayerGroup className="text-blue-600" /> Subscription: <span className="font-mono">{code} {subscriptionType === "month" ? "Đăng ký tháng" : "Đăng ký năm"}</span>
+                <FaLayerGroup className="text-blue-600" /> Subscription {code}
             </h1>
+            <h2 className="flex items-center gap-2 mb-4 font-semibold text-lg">
+                <FaMagic className="text-blue-600" /> {/* Thêm icon ở đây */}
+                {subscriptionType === "month" ? "Đăng ký mỗi tháng" : "Đăng ký mỗi năm"}
+            </h2>
             <div className="flex items-center gap-3 mt-2">
                 <button
                     onClick={() => router.push('/')}
-                    className="flex items-center gap-2 bg-blue-100 dark:bg-blue-800 px-3 py-1 rounded-md text-blue-800 dark:text-white hover:scale-105 transition"
+                    className="flex items-center gap-2 bg-blue-100 px-3 py-1 rounded-md text-blue-800 dark:text-white hover:scale-105 transition"
                 >
                     <FaCalendarAlt /> Trang chủ
                 </button>
@@ -525,7 +529,7 @@ export default function ManageSubscriptionPage() {
                     disabled={!isEditable}
                     value={subscription.name}
                     onChange={e => handleNameChange(e.target.value)}
-                    className="disabled:opacity-60 px-3 py-2 border rounded w-full"
+                    className="disabled:opacity-60 px-3 py-2 border border-amber-500 rounded w-full font-semibold"
                     placeholder="VD: ChatGPT, Netflix..."
                 />
             </div>
@@ -554,28 +558,28 @@ export default function ManageSubscriptionPage() {
             </div>)}
 
             <div>
-                <label className="block mb-2 font-semibold text-lg">{subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block mb-2 font-semibold text-lg">
+                    {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
+                </label>
+                <div className="grid gap-2 grid-cols-4 md:grid-cols-8">
                     {Object.keys(subscription.history)
                         .filter(key => {
-                            // Nếu subscription_type là 'year', chỉ lấy key dạng YYYY
-                            if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key)
-                            // Nếu là 'month', chỉ lấy dạng MM/YYYY
-                            return /^\d{2}\/\d{4}$/.test(key)
+                            if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key);
+                            return /^\d{2}\/\d{4}$/.test(key);
                         })
                         .sort((a, b) => {
-                            const [aM, aY] = a.split('/').map(Number)
-                            const [bM, bY] = b.split('/').map(Number)
-                            return new Date(aY, aM - 1).getTime() - new Date(bY, bM - 1).getTime()
+                            const [aM, aY] = a.split('/').map(Number);
+                            const [bM, bY] = b.split('/').map(Number);
+                            return new Date(aY, aM - 1).getTime() - new Date(bY, bM - 1).getTime();
                         })
                         .map(month => (
                             <button
                                 key={month}
                                 onClick={() => switchMonth(month)}
-                                className={`flex items-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border
-                  ${month === currentMonth
-                                        ? 'bg-blue-700 text-white border-blue-900 scale-105'
-                                        : 'bg-white dark:bg-zinc-700 text-gray-700 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-zinc-600 border-gray-300'
+                                className={`w-full flex items-center justify-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border
+                        ${month === currentMonth
+                                        ? 'bg-blue-900  border-2 text-white font-semibold border-amber-300 scale-105'
+                                        : '   dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-zinc-600 border-gray-300'
                                     }`}
                             >
                                 📅 {month}
@@ -584,7 +588,10 @@ export default function ManageSubscriptionPage() {
                 </div>
             </div>
 
-            <div>
+
+
+
+            {isEditable && (<div>
                 <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                 <input
                     type="text"
@@ -616,9 +623,9 @@ export default function ManageSubscriptionPage() {
                     placeholder="Nhập số tiền"
                     className="disabled:opacity-60 px-4 py-2 border rounded w-full text-base"
                 />
-            </div>
+            </div>)}
 
-            <div>
+            {isEditable && (<div>
                 <label className="block mb-1 font-medium">👥 Thêm thành viên</label>
                 <div className="flex gap-2">
                     <input
@@ -636,7 +643,7 @@ export default function ManageSubscriptionPage() {
                         <FaPlus className="text-lg" /> Thêm
                     </button>
                 </div>
-            </div>
+            </div>)}
 
             <div>
 
