@@ -12,7 +12,7 @@ export default function ThemeToggleButton() {
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
-    animationType: ThemeAnimationType.BLUR_CIRCLE,
+    animationType: ThemeAnimationType.CIRCLE,
     blurAmount: 4, // Optional: adjust blur intensity
     duration: 1000, // Optional: adjust animation duration
   })
@@ -29,30 +29,6 @@ export default function ThemeToggleButton() {
     setTheme(saved)
   }, [])
 
-  // useEffect(() => {
-  //   const appliedTheme = theme === 'auto' ? getSystemTheme() : theme
-  //   setResolvedTheme(appliedTheme)
-  //   document.documentElement.classList.toggle('dark', appliedTheme === 'dark')
-
-  //   if (appliedTheme === 'dark' !== isDarkMode) {
-  //     toggleSwitchTheme()
-  //   }
-  // }, [theme])
-
-  // useEffect(() => {
-  //   if (theme !== 'auto' || typeof window === 'undefined') return
-
-  //   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-
-  //   const systemChangeListener = (e: MediaQueryListEvent) => {
-  //     const newTheme = e.matches ? 'dark' : 'light'
-  //     setResolvedTheme(newTheme)
-  //     document.documentElement.classList.toggle('dark', newTheme === 'dark')
-  //   }
-
-  //   mediaQuery.addEventListener('change', systemChangeListener)
-  //   return () => mediaQuery.removeEventListener('change', systemChangeListener)
-  // }, [theme])
 
   const nextTheme = (current: ThemeMode): ThemeMode => {
     switch (current) {

@@ -15,8 +15,6 @@ export default function HomePage() {
   const [invitedMap, setInvitedMap] = useState<Record<string, string>>({})
   const [qrCodeToShow, setQrCodeToShow] = useState<string | null>(null)
   const [showZoomQR, setShowZoomQR] = useState(false)
-  const [passwordPrompt, setPasswordPrompt] = useState<{ code: string; requirePassword: boolean } | null>(null)
-  const [passwordInput, setPasswordInput] = useState('')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -98,26 +96,9 @@ export default function HomePage() {
   }
 
   const openSubscription = async (code: string) => {
-    const sub = subs.find(s => s.id === code)
-    if (sub?.password) {
-      setPasswordPrompt({ code, requirePassword: true })
-    } else {
       router.push(`/manage/${code}`)
-    }
   }
 
-  const confirmPassword = async () => {
-    const sub = subs.find(s => s.id === passwordPrompt?.code)
-    if (!sub || !sub.password) return
-
-    if (sub.password === passwordInput) {
-      setPasswordPrompt(null)
-      setPasswordInput('')
-      router.push(`/manage/${sub.id}`)
-    } else {
-      alert('❌ Sai mật khẩu, vui lòng thử lại.')
-    }
-  }
 
   return (
     <main className="flex flex-col justify-center items-center space-y-10 px-6 min-h-screen">
@@ -254,35 +235,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {passwordPrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">🔐</span>
-              <h2 className="text-xl font-bold">Nhập mật khẩu để mở Subscription</h2>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-              Subscription <span className="font-mono text-blue-700 dark:text-blue-300">{passwordPrompt.code}</span> đang được bảo vệ.
-            </p>
-            <input
-              type="password"
-              value={passwordInput}
-              onChange={e => setPasswordInput(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Nhập mật khẩu..."
-              autoFocus
-            />
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setPasswordPrompt(null)} className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-                Huỷ
-              </button>
-              <button onClick={confirmPassword} className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition">
-                Mở khoá
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+     
     </main>
   )
 }

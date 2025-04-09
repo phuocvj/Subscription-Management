@@ -1,7 +1,7 @@
 // Quản lý subscription theo tháng với chức năng tạo 12 tháng tiếp theo
 'use client'
 import { supabase } from '@/app/lib/supabase'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
 import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus } from 'react-icons/fa'
@@ -60,7 +60,14 @@ export default function ManageSubscriptionPage() {
     const [pendingInvite, setPendingInvite] = useState(false)
     const [checkingAuth, setCheckingAuth] = useState(true)
 
+    //danh cho anonymous
+    const [showPasswordPrompt, setShowPasswordPrompt] = useState(false)
+    const [inputPassword, setInputPassword] = useState('')
+    const [passwordError, setPasswordError] = useState('')
+    const [rawRow, setRawRow] = useState<any>(null)
+
     const router = useRouter()
+    const subscriptionRowRaw = useRef<any>(null)
 
     // const isEditable = userId && ownerId && userId === ownerId
     // Kiểm tra xem có phải người được mời chưa xác nhận không
@@ -99,6 +106,7 @@ export default function ManageSubscriptionPage() {
                 .select('*')
                 .eq('id', code)
                 .single()
+            setInviteEmail
 
             if (error && error.code !== 'PGRST116') {
                 console.error('Lỗi khi load subscription:', error)
@@ -107,15 +115,27 @@ export default function ManageSubscriptionPage() {
             const now = new Date()
 
             let data: SubscriptionData
-
+            subscriptionRowRaw.current = row
             if (row) {
+
                 setOwnerId(row.owner_id || null)
+
+                // 👇 Nếu subscription đã có, chỉ cần lấy dữ liệu và cập nhật lại
+                setRawRow(row) // 👉 Lưu lại toàn bộ row để sau này dùng mật khẩu
+
+                // 👇 Nếu chưa đăng nhập mà subscription có mật khẩu → yêu cầu nhập
+                if (!userId && row.password) {
+                    setShowPasswordPrompt(true)
+                    return // ⛔ Không load tiếp nếu chưa xác minh
+                }
                 data = {
                     ...row.data,
                     password: row.password ?? '',
                     note: row.note ?? '',
                     subscription_type: subscriptionType,
                 }
+
+
             } else {
                 if (!userId) {
                     console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
@@ -472,7 +492,71 @@ export default function ManageSubscriptionPage() {
         )
 
     const current = subscription.history[currentMonth]
+    if (showPasswordPrompt) {
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+                <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
+                    <div className="flex items-center gap-3 mb-4">
+                        <span className="text-3xl">🔐</span>
+                        <h2 className="text-xl font-bold">Nhập mật khẩu để mở Subscription</h2>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                        Subscription <span className="font-mono text-blue-700 dark:text-blue-300">{params.id}</span> đang được bảo vệ.
+                    </p>
+                    <input
+                        type="password"
+                        value={inputPassword}
+                        onChange={(e) => setInputPassword(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Nhập mật khẩu..."
+                        autoFocus
+                    />
+                    {passwordError && <p className="text-red-500 text-sm mb-2">{passwordError}</p>}
+                    <div className="flex justify-end gap-2">
+                        <button
+                            className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                            onClick={() => router.push('/')}
+                        >
+                            Huỷ
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (inputPassword === rawRow?.password) {
+                                    setShowPasswordPrompt(false)
+                                    const now = new Date()
+                                    const displayKey = subscriptionType === 'year'
+                                        ? `${now.getFullYear()}`
+                                        : `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
 
+                                    const historyData = rawRow.data.history || {}
+                                    if (!historyData[displayKey]) {
+                                        historyData[displayKey] = { amount: 0, members: [] }
+                                    }
+
+                                    setCurrentMonth(displayKey)
+                                    setNewAmount(historyData[displayKey].amount ?? 0)
+
+                                    const data: SubscriptionData = {
+                                        ...rawRow.data,
+                                        password: rawRow.password ?? '',
+                                        note: rawRow.note ?? '',
+                                        subscription_type: subscriptionType,
+                                    }
+
+                                    setSubscription(data)
+                                } else {
+                                    setPasswordError('❌ Sai mật khẩu. Vui lòng thử lại.')
+                                }
+                            }}
+                            className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
+                        >
+                            Mở khoá
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
     // phần render mới với phân quyền isEditable
     return (
         <div className="space-y-6 mx-auto p-6 max-w-3xl">
@@ -836,6 +920,10 @@ export default function ManageSubscriptionPage() {
                     <InviteList subscriptionId={code} />
                 </div>
             )}
+
+
+
+
 
         </div>
     )
