@@ -775,8 +775,8 @@ export default function ManageSubscriptionPage() {
 
 
             {invitePopup && (
-                <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white dark:bg-zinc-800 shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
+                <div className="z-50 bg-blue-950 text-white fixed inset-0 flex justify-center items-center  bg-opacity-50 backdrop-blur-sm animate-fade-in">
+                    <div className=" shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">📧</span>
                             <h2 className="font-bold text-xl">Mời người khác quản lý Subscription</h2>
@@ -801,11 +801,18 @@ export default function ManageSubscriptionPage() {
                                     const email = inviteEmail.trim().toLowerCase()
                                     if (!email) return
 
+                                    // Kiểm tra chỉ chấp nhận email @gmail.com
+                                    if (!email.endsWith('@gmail.com')) {
+                                        alert('Chỉ được phép mời địa chỉ email Google (@gmail.com)')
+                                        return
+                                    }
+
                                     const { error } = await supabase.from('subscription_editors').upsert({
                                         subscription_id: code,
                                         email,
                                         inviter_email: userEmail // 👈 cập nhật người gửi lời mời
                                     }, { onConflict: 'subscription_id,email' })
+
                                     if (error) alert('Lỗi khi mời: ' + error.message)
                                     else alert('✅ Đã gửi lời mời thành công!')
                                     setInviteEmail('')
