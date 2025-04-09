@@ -128,19 +128,34 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-6">
             <button
               onClick={() => router.push('/create')}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition"
+              className="relative group bg-blue-600 hover:bg-blue-700 shadow-md 
+             w-[72px] h-[72px] sm:w-auto sm:h-auto 
+             flex justify-center items-center 
+             rounded-full sm:rounded-lg 
+             text-white text-lg transition 
+             sm:px-6 sm:py-4"
             >
-              <FaPlusCircle size={24} />
-              <span className="hidden sm:inline">Create A Subscription</span>
+              <FaPlusCircle className="text-4xl sm:text-xl transition-all duration-300" />
+              <span className="absolute sm:static opacity-0 max-w-0 sm:opacity-100 sm:max-w-full transition-all duration-300 overflow-hidden whitespace-nowrap ml-2">
+                Create A Subscription
+              </span>
             </button>
 
             <button
               onClick={() => router.push('/open')}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 shadow-md px-6 py-4 rounded-lg text-white text-lg transition"
+              className="relative group bg-green-600 hover:bg-green-700 shadow-md 
+             w-[72px] h-[72px] sm:w-auto sm:h-auto 
+             flex justify-center items-center 
+             rounded-full sm:rounded-lg 
+             text-white text-lg transition 
+             sm:px-6 sm:py-4"
             >
-              <FaFolderOpen size={24} />
-              <span className="hidden sm:inline">Open A Subscription</span>
+              <FaFolderOpen className="text-4xl sm:text-xl transition-all duration-300" />
+              <span className="absolute sm:static opacity-0 max-w-0 sm:opacity-100 sm:max-w-full transition-all duration-300 overflow-hidden whitespace-nowrap ml-2">
+                Open A Subscription
+              </span>
             </button>
+
           </div>
 
           <div className="mt-2 text-sm flex flex-col items-center text-center">
