@@ -2,14 +2,14 @@
 
 ---
 
-## 🇻🇳 Giới thiệu
+##  Giới thiệu
 
 **Subscription Manager** là ứng dụng giúp bạn quản lý các đăng ký dịch vụ (subscriptions) một cách **dễ dàng** và **trực quan**, phân loại rõ ràng theo **tháng**.
 
 ### ⚠️ Tình trạng hiện tại
 
-- Dữ liệu hiện được lưu **cục bộ trên thiết bị của bạn**, đảm bảo **riêng tư tuyệt đối**.
-- Tuy nhiên, nếu bạn **cài lại máy** hoặc **mất thiết bị**, dữ liệu sẽ **bị mất vĩnh viễn**.
+- Dữ liệu hiện được lưu **trên một server miễn phí**, đảm bảo **riêng tư tuyệt đối**.
+- Mình cần thêm kinh phí để **xây dựng server** lưu trữ vĩnh viễn dữ liệu.
 
 ### 🙏 Lời kêu gọi ủng hộ
 
@@ -19,14 +19,14 @@
 
 ---
 
-## 🇺🇸 Introduction 
+##  Introduction 
 
 **Subscription Manager** is a minimalist app that helps you **track and manage your subscriptions**, organized by **month**.
 
 ### ⚠️ Current Limitation
 
 - All your data is stored **locally on your device**, ensuring **complete privacy**.
-- However, this also means if you **reinstall your system** or **lose your device**, your data will be **lost forever**.
+- Need more budget to **build a server** for permanent data storage.
 
 ### 🙏 Support This Project
 
