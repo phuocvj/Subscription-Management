@@ -4,16 +4,40 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FaMagic, FaSpinner, FaArrowRight } from 'react-icons/fa'
 import { supabase } from '@/app/lib/supabase'
-
-function generateCode(length = 6) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+import { customAlphabet, nanoid } from 'nanoid'
+export async function generateUniqueCode(): Promise<string> {
     let code = ''
-    for (let i = 0; i < length; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return code
-}
+    let attempts = 0
 
+    while (true) {
+        const raw = nanoid(12) // sinh chuỗi dài hơn → tăng entropy
+        code = raw
+            .replace(/[^A-Z0-9]/gi, '') // chỉ giữ chữ và số
+            .toUpperCase()
+            .substring(0, 6) // lấy 6 ký tự đầu tiên
+
+        attempts++
+
+        const { data, error } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('id', code)
+            .maybeSingle()
+
+        if (error) {
+            console.error('Lỗi khi kiểm tra code:', error)
+            throw new Error('Không thể kiểm tra mã. Vui lòng thử lại.')
+        }
+
+        if (!data) {
+            return code
+        }
+
+        if (attempts > 10) {
+            throw new Error('Không thể tạo mã duy nhất sau nhiều lần thử.')
+        }
+    }
+}
 export default function CreatePage() {
     const [code, setCode] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -36,7 +60,7 @@ export default function CreatePage() {
             const user = session.user
             const now = new Date()
             const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-            const newCode = generateCode()
+            const newCode = await generateUniqueCode()
 
             const defaultData = {
                 name: '',

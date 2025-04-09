@@ -8,6 +8,7 @@ import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, F
 import { useRouter } from 'next/navigation'
 import InviteList from '@/app/components/InviteList'
 import CloneNextPeriodsModal from '@/app/components/CloneNext12MonthsModal'
+import TextareaAutosize from 'react-textarea-autosize'
 
 // Loại thành viên
 type Member = {
@@ -632,12 +633,13 @@ export default function ManageSubscriptionPage() {
 
             {isEditable && (<div>
                 <label className="block mb-1 font-medium">📝 Ghi chú (tuỳ chọn)</label>
-                <textarea
+                <TextareaAutosize
+                    minRows={2}
+                    maxRows={10}
                     disabled={!isEditable}
                     value={subscription.note || ''}
                     onChange={e => handleNoteChange(e.target.value)}
-                    className="disabled:opacity-60 px-3 py-2 border rounded w-full"
-                    placeholder="Thông tin thêm về subscription..."
+                    className="disabled:opacity-60 px-3 py-2 border rounded w-full resize-none overflow-hidden transition-all"
                 />
             </div>)}
 
@@ -809,13 +811,14 @@ export default function ManageSubscriptionPage() {
                             </div>
                             {/* 👇 Đây là phần mới: note nằm ở dưới, full width */}
                             {isEditable ? (
-                                <textarea
+                                <TextareaAutosize
+                                    minRows={2}
+                                    maxRows={6}
                                     disabled={!isEditable}
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú..."
-                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full text-sm resize-y"
-                                    rows={2}
+                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full text-sm resize-none overflow-hidden transition-all"
                                 />
                             ) : (
                                 m.note && (

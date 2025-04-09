@@ -1,14 +1,21 @@
 // app/layout.tsx
 import './globals.css'
-import { Inter } from 'next/font/google'
 import ThemeProvider from './components/ThemeProvider'
 import ThemeToggleButton from './components/ThemeToggleButton'
+// file layout.tsx hoặc root layout
+import { Lobster } from 'next/font/google'
+import { Inter } from 'next/font/google'
 
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
 })
+const lobster = Lobster({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
 
 export const metadata = {
   title: 'Subscription Manager',
@@ -18,9 +25,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans">
-       
+    <html lang="en" >
+      <body className={`${inter.className}`}>
+
         <ThemeProvider>
 
           {children}
