@@ -14,15 +14,9 @@ export default function ThemeToggleButton() {
   const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
     animationType: ThemeAnimationType.BLUR_CIRCLE,
     blurAmount: 1, // Optional: adjust blur intensity
-    duration: 500, // Optional: adjust animation duration
+    duration: 1000, // Optional: adjust animation duration
   })
 
-  const getSystemTheme = (): 'light' | 'dark' => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    }
-    return 'light'
-  }
 
   useEffect(() => {
     const saved = (localStorage.getItem('theme') as ThemeMode) || 'auto'
