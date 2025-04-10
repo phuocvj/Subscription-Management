@@ -486,27 +486,29 @@ export default function ManageSubscriptionPage() {
     }
     if (showPasswordPrompt) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-                <div className="bg-white dark:bg-zinc-800 p-6 rounded-2xl shadow-2xl w-96 animate-popup-zoom transition-all duration-300">
+            <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm animate-fade-in">
+                <div className="bg-white dark:bg-zinc-800 shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                     <div className="flex items-center gap-3 mb-4">
                         <span className="text-3xl">🔐</span>
-                        <h2 className="text-xl font-bold">Nhập mật khẩu để mở Subscription</h2>
+                        <h2 className="font-bold text-gray-900 dark:text-gray-100 text-xl">
+                            Nhập mật khẩu để mở Subscription
+                        </h2>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    <p className="mb-3 text-gray-600 dark:text-gray-300 text-sm">
                         Subscription <span className="font-mono text-blue-700 dark:text-blue-300">{params.id}</span> đang được bảo vệ.
                     </p>
                     <input
                         type="password"
                         value={inputPassword}
                         onChange={(e) => setInputPassword(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="bg-gray-100 dark:bg-zinc-700 mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-gray-900 dark:text-gray-100"
                         placeholder="Nhập mật khẩu..."
                         autoFocus
                     />
-                    {passwordError && <p className="text-red-500 text-sm mb-2">{passwordError}</p>}
+                    {passwordError && <p className="mb-2 text-red-500 text-sm">{passwordError}</p>}
                     <div className="flex justify-end gap-2">
                         <button
-                            className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                            className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-md text-gray-900 dark:text-gray-100 transition"
                             onClick={() => router.push('/')}
                         >
                             Huỷ
@@ -540,7 +542,7 @@ export default function ManageSubscriptionPage() {
                                     setPasswordError('❌ Sai mật khẩu. Vui lòng thử lại.')
                                 }
                             }}
-                            className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition"
+                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-white transition"
                         >
                             Mở khoá
                         </button>
@@ -639,7 +641,7 @@ export default function ManageSubscriptionPage() {
                     disabled={!isEditable}
                     value={subscription.note || ''}
                     onChange={e => handleNoteChange(e.target.value)}
-                    className="disabled:opacity-60 px-3 py-2 border rounded w-full resize-none overflow-hidden transition-all"
+                    className="disabled:opacity-60 px-3 py-2 border rounded w-full overflow-hidden transition-all resize-none"
                 />
             </div>)}
 
@@ -647,7 +649,7 @@ export default function ManageSubscriptionPage() {
                 <label className="block mb-2 font-semibold text-lg">
                     {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
                 </label>
-                <div className="grid gap-2 grid-cols-4 md:grid-cols-8">
+                <div className="gap-2 grid grid-cols-4 md:grid-cols-8">
                     {Object.keys(subscription.history)
                         .filter(key => {
                             if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key);
@@ -818,7 +820,7 @@ export default function ManageSubscriptionPage() {
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú..."
-                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full text-sm resize-none overflow-hidden transition-all"
+                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full overflow-hidden text-sm transition-all resize-none"
                                 />
                             ) : (
                                 m.note && (
@@ -862,8 +864,8 @@ export default function ManageSubscriptionPage() {
 
 
             {invitePopup && (
-                <div className="z-50 bg-blue-950 text-white fixed inset-0 flex justify-center items-center  bg-opacity-50 backdrop-blur-sm animate-fade-in">
-                    <div className=" shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
+                <div className="z-50 fixed inset-0 flex justify-center items-center bg-blue-950 bg-opacity-50 backdrop-blur-sm text-white animate-fade-in">
+                    <div className="shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">📧</span>
                             <h2 className="font-bold text-xl">Mời người khác quản lý Subscription</h2>
