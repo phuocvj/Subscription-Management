@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { FaMagic, FaSpinner, FaArrowRight } from 'react-icons/fa'
 import { supabase } from '@/app/lib/supabase'
 import { customAlphabet, nanoid } from 'nanoid'
-export async function generateUniqueCode(): Promise<string> {
+async function generateUniqueCode(): Promise<string> {
     let code = ''
     let attempts = 0
 
