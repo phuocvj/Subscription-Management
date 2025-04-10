@@ -60,7 +60,7 @@ export default function ThemeToggleButton() {
       whileTap={{ rotate: 180, scale: 0.9 }}
       animate={{ rotate: 0, scale: 1 }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="z-50 relative bg-gray-200 dark:bg-zinc-800 p-2 rounded-full text-yellow-600 dark:text-yellow-200 hover:scale-110 transition"
+      className="z-50 relative bg-gray-200 dark:bg-zinc-800 p-4 rounded-full text-yellow-600 dark:text-yellow-200 text-2xl hover:scale-110 transition"
       title={`Chế độ giao diện: ${theme}`}
     >
       {renderIcon()}

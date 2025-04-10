@@ -105,57 +105,46 @@ export default function HomePage() {
 
   return (
     <main className="relative flex flex-col justify-center items-center space-y-10 px-6 min-h-screen overflow-hidden">
-      <div className="absolute inset-0 -z-10 animate-gradient bg-gradient-to-br  from-blue-300 via-pink-200 to-yellow-200 opacity-20 dark:opacity-10 blur-3xl" />
+      <div className="-z-10 absolute inset-0 bg-gradient-to-br from-blue-300 via-pink-200 to-yellow-200 opacity-20 dark:opacity-10 blur-3xl animate-gradient" />
         <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
         {session ? (
           <div className="flex flex-col items-center gap-3">
             <div className="flex flex-wrap justify-center gap-6">
               <button
                 onClick={() => router.push('/create')}
-                className="relative group bg-blue-600 hover:bg-blue-700 shadow-md 
-             w-[72px] h-[72px] sm:w-auto sm:h-auto 
-             flex justify-center items-center 
-             rounded-full sm:rounded-lg 
-             text-white text-lg transition 
-             sm:px-6 sm:py-4"
+                className="group relative flex justify-center items-center bg-blue-600 hover:bg-blue-700 shadow-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition"
               >
-                <FaPlusCircle className="text-4xl sm:text-xl transition-all duration-300" />
-                <span className="absolute sm:static opacity-0 max-w-0 sm:opacity-100 sm:max-w-full transition-all duration-300 overflow-hidden whitespace-nowrap ml-2">
+                <FaPlusCircle className="sm:text-xl text-4xl transition-all duration-300" />
+                <span className="sm:static absolute opacity-0 sm:opacity-100 ml-2 max-w-0 sm:max-w-full overflow-hidden whitespace-nowrap transition-all duration-300">
                   Create A Subscription
                 </span>
               </button>
 
               <button
                 onClick={() => router.push('/open')}
-                className="relative group bg-green-600 hover:bg-green-700 shadow-md 
-             w-[72px] h-[72px] sm:w-auto sm:h-auto 
-             flex justify-center items-center 
-             rounded-full sm:rounded-lg 
-             text-white text-lg transition 
-             sm:px-6 sm:py-4"
+                className="group relative flex justify-center items-center bg-green-600 hover:bg-green-700 shadow-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition"
               >
-                <FaFolderOpen className="text-4xl sm:text-xl transition-all duration-300" />
-                <span className="absolute sm:static opacity-0 max-w-0 sm:opacity-100 sm:max-w-full transition-all duration-300 overflow-hidden whitespace-nowrap ml-2">
+                <FaFolderOpen className="sm:text-xl text-4xl transition-all duration-300" />
+                <span className="sm:static absolute opacity-0 sm:opacity-100 ml-2 max-w-0 sm:max-w-full overflow-hidden whitespace-nowrap transition-all duration-300">
                   Open A Subscription
                 </span>
               </button>
 
             </div>
 
-            <div className="mt-2 text-sm flex flex-col items-center text-center">
+            <div className="flex flex-col items-center mt-2 text-sm text-center">
               <span className="mb-1 text-center">
                 👋 Xin chào, <strong>{session.user.user_metadata.full_name} ({session.user.user_metadata.email})</strong>
               </span>
               <button
                 onClick={signOut}
-                className="flex items-center gap-2 px-4 py-2 rounded-md text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-zinc-800 hover:bg-blue-200 dark:hover:bg-zinc-700 transition-all shadow-sm hover:shadow-md"
+                className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 shadow-sm hover:shadow-md px-4 py-2 rounded-md text-blue-600 dark:text-blue-400 transition-all"
               >
                 <FaSignOutAlt />
                 Đăng xuất
               </button>
 
             </div>
-            <ThemeToggleButton />
           </div>
         ) : (
           <div className="flex justify-center">
@@ -166,8 +155,8 @@ export default function HomePage() {
         )}
 
         {session && (
-          <div className="mt-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 border-2 border-gray-300 dark:border-zinc-600 rounded-lg p-6 shadow-md space-y-4">
+          <div className="gap-10 grid grid-cols-1 lg:grid-cols-3 mt-10 w-full max-w-6xl">
+            <div className="space-y-4 lg:col-span-2 shadow-md p-6 border-2 border-gray-300 dark:border-zinc-600 rounded-lg">
               {subs.length > 0 && (
                 <>
                   <h2 className="mb-4 font-semibold text-xl">📦 Các Subscription</h2>
@@ -176,7 +165,7 @@ export default function HomePage() {
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     placeholder="🔍 Tìm theo tên hoặc mã subscription..."
-                    className="w-full px-4 py-2 border rounded-md border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="bg-white dark:bg-zinc-900 mb-4 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
                   />
                   <ul className="space-y-3">
                     {subs.filter(sub => {
@@ -186,12 +175,12 @@ export default function HomePage() {
                         (sub.name && sub.name.toLowerCase().includes(keyword))
                       )
                     }).map(sub => (
-                      <li key={sub.id} className="flex justify-between items-center gap-4 hover:scale-105 shadow px-4 py-3 border rounded transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
+                      <li key={sub.id} className="flex justify-between items-center gap-4 shadow px-4 py-3 border rounded hover:scale-105 transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
                         <div className="flex-1">
                           <div className="font-mono text-gray-500 text-sm">Mã: {sub.id}</div>
                           <div className="font-semibold text-lg">{sub.name}</div>
                           {invitedMap[sub.id] && (
-                            <div className="text-sm text-yellow-600">🔗 Được mời bởi: {invitedMap[sub.id]}</div>
+                            <div className="text-yellow-600 text-sm">🔗 Được mời bởi: {invitedMap[sub.id]}</div>
                           )}
                           {sub.created_at && (
                             <div className="mt-1 text-gray-500 text-sm">
@@ -255,24 +244,24 @@ export default function HomePage() {
 
         {qrCodeToShow && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm"
+            className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-60 backdrop-blur-sm"
             onClick={() => setQrCodeToShow(null)}
           >
             <div
-              className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl animate-popup-zoom"
+              className="bg-white dark:bg-zinc-900 shadow-2xl p-6 rounded-2xl animate-popup-zoom"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold mb-4 text-center">📱 Quét QR để mở Subscription</h2>
+              <h2 className="mb-4 font-bold text-xl text-center">📱 Quét QR để mở Subscription</h2>
               <QRCodeCanvas
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${qrCodeToShow}`}
                 size={256}
                 bgColor="#ffffff"
                 fgColor="#000000"
-                className="rounded mx-auto"
+                className="mx-auto rounded"
               />
               <button
                 onClick={() => setQrCodeToShow(null)}
-                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition"
+                className="bg-blue-600 hover:bg-blue-700 mt-6 px-4 py-2 rounded-lg w-full text-white transition"
               >
                 Đóng
               </button>
@@ -281,22 +270,22 @@ export default function HomePage() {
         )}
         {showZoomQRDonation && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm"
+            className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-60 backdrop-blur-sm"
             onClick={() => setShowZoomQRDonation(false)}
           >
             <div
-              className="bg-white dark:bg-zinc-900 p-6 rounded-2xl shadow-2xl animate-popup-zoom"
+              className="bg-white dark:bg-zinc-900 shadow-2xl p-6 rounded-2xl animate-popup-zoom"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold mb-4 text-center">🎁 Quét QR để ủng hộ tác giả</h2>
+              <h2 className="mb-4 font-bold text-xl text-center">🎁 Quét QR để ủng hộ tác giả</h2>
               <img
                 src="/vietqr.gif"
                 alt="QR Vietinbank"
-                className="w-80 h-auto object-contain mx-auto"
+                className="mx-auto w-80 h-auto object-contain"
               />
               <button
                 onClick={() => setShowZoomQRDonation(false)}
-                className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg transition"
+                className="bg-indigo-600 hover:bg-indigo-700 mt-6 px-4 py-2 rounded-lg w-full text-white transition"
               >
                 Đóng
               </button>

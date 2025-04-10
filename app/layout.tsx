@@ -27,9 +27,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" >
       <body className={`${inter.className}`}>
-
+        <div style={{
+          position: 'fixed',
+          top: '1rem',
+          right: '1rem',
+          zIndex: 1000,
+        }}>
+          <ThemeToggleButton />
+        </div>
         <ThemeProvider>
-
           {children}
         </ThemeProvider>
       </body>
