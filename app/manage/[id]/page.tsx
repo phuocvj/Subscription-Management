@@ -564,7 +564,7 @@ export default function ManageSubscriptionPage() {
 
     // phần render mới với phân quyền isEditable
     return (
-        <div className="space-y-6 mx-auto p-6 max-w-3xl">
+        <div className="space-y-6 mx-auto p-6 max-w-3xl dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] dark:bg-gray-800/50">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
                 <FaLayerGroup className="text-blue-600" /> Subscription {code}
             </h1>
@@ -612,19 +612,19 @@ export default function ManageSubscriptionPage() {
                     </button>
                 </div>
             )}
-            <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
+            <div className="rounded-2xl shadow-lg backdrop-blur-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] dark:bg-gray-700/50 p-4 space-y-3">
 
                 <label className="block mb-1 font-medium">📛 Tên Subscription</label>
                 <input
                     disabled={!isEditable}
                     value={subscription.name}
                     onChange={e => handleNameChange(e.target.value)}
-                    className="disabled:opacity-60 px-3 py-2 border border-amber-500 rounded w-full font-semibold"
+                    className="disabled:opacity-60 px-3 py-2 border border-amber-500 rounded w-full font-semibold dark:bg-gray-600/50 dark:border-amber-400 dark:text-white"
                     placeholder="VD: ChatGPT, Netflix..."
                 />
             </div>
 
-            {isEditable && (<div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
+            {isEditable && (<div className="rounded-2xl shadow-lg backdrop-blur-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] dark:bg-gray-700/50 p-4 space-y-3">
                 <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
                 <input
                     disabled={!isEditable}
@@ -647,7 +647,7 @@ export default function ManageSubscriptionPage() {
                 />
             </div>)}
 
-            <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
+            <div className="rounded-2xl shadow-lg backdrop-blur-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] dark:bg-gray-700/50 p-4 space-y-3">
 
                 <label className="block mb-2 font-semibold text-lg">
                     {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
@@ -683,7 +683,7 @@ export default function ManageSubscriptionPage() {
 
 
             {isEditable && (
-                <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-4">
+                <div className="rounded-2xl shadow-lg backdrop-blur-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] dark:bg-gray-700/50 p-4 space-y-4">
 
                     <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                     <input

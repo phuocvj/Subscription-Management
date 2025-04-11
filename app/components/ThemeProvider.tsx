@@ -7,7 +7,9 @@ import { ReactNode } from 'react'
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {children}
+      <div className="min-h-screen transition-colors duration-300">
+        {children}
+      </div>
     </ThemeProvider>
   )
 }

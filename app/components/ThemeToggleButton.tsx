@@ -4,7 +4,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
 import { FaSun, FaMoon, FaAdjust } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useConfettiBoom } from '../hook/useConfettiBoom'
+import { useConfettiBoom } from '../hooks/useConfettiBoom'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
