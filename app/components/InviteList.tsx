@@ -47,10 +47,10 @@ function InviteList({ subscriptionId }: { subscriptionId: string }) {
     return (
         <ul className="space-y-2">
             {editors.map(({ email, accepted }) => (
-                <li key={email} className="flex items-center justify-between border rounded px-4 py-2 bg-white dark:bg-zinc-800 shadow-sm">
+                <li key={email} className="flex items-center justify-between border rounded px-4 py-2  shadow-sm">
                     <div>
                         <p className="font-medium">{email}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm ">
                             {accepted ? '✅ Đã chấp nhận' : '⌛ Chưa chấp nhận'}
                         </p>
                     </div>

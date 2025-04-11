@@ -57,7 +57,7 @@ export default function ThemeToggleButton() {
       ref={buttonRef}
       onClick={handleToggle}
       whileTap={{ scale: 0.9 }}
-      className="z-50 relative bg-gray-200 dark:bg-zinc-800 p-4 rounded-full text-yellow-600 dark:text-yellow-200 text-2xl hover:scale-110 transition"
+      className="z-50 relative bg-gray-200 dark:bg-zinc-800 p-4 rounded-full text-yellow-600 dark:text-yellow-200 text-xl hover:scale-110 transition"
       title={`Chế độ: ${theme}`}
     >
       <AnimatePresence mode="wait">

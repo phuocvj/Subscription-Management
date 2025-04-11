@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans transition-colors duration-300">
         <Providers>
           <ThemeTransitionOverlay />
-          <ConfettiCanvas />
+          {/* <ConfettiCanvas /> */}
 
         
 

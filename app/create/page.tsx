@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { FaMagic, FaSpinner, FaArrowRight } from 'react-icons/fa'
 import { supabase } from '@/app/lib/supabase'
 import { customAlphabet, nanoid } from 'nanoid'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+
 async function generateUniqueCode(): Promise<string> {
     let code = ''
     let attempts = 0
@@ -42,6 +45,8 @@ export default function CreatePage() {
     const [code, setCode] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [type, setType] = useState<'month' | 'year'>('month') // thêm state loại subscription
+    const [selectedDate, setSelectedDate] = useState(() => new Date())
+
     const router = useRouter()
     const createdRef = useRef(false)
 
@@ -49,58 +54,62 @@ export default function CreatePage() {
         if (createdRef.current) return
         createdRef.current = true
 
-        const createSubscription = async () => {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-
-            if (!session || sessionError) {
-                setError('❌ Vui lòng đăng nhập để tạo Subscription.')
-                return
-            }
-
-            const user = session.user
-            const now = new Date()
-            const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+        const prepareCode = async () => {
             const newCode = await generateUniqueCode()
-
-            const defaultData = {
-                name: '',
-                password: '',
-                note: '',
-                history: {
-                    [monthKey]: {
-                        amount: 0,
-                        members: []
-                    }
-                }
-            }
-
-            const { error: insertError } = await supabase.from('subscriptions').insert({
-                id: newCode,
-                owner_id: user.id,
-                name: '',
-                password: '',
-                note: '',
-                data: defaultData,
-                created_at: now.toISOString(),
-                last_edited_at: now.toISOString(),
-                last_edited_by: user.id + '|' + user.email,
-            })
-
-            if (insertError) {
-                setError(`❌ Lỗi khi tạo subscription: ${insertError.message}`)
-                return
-            }
-
             setCode(newCode)
         }
 
-        createSubscription()
+        prepareCode()
     }, [])
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (!code) return
-        router.push(`/manage/${code}?type=${type}`) // bạn có thể lấy type ở trang manage nếu cần
+
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+        if (!session || sessionError) {
+            setError('❌ Vui lòng đăng nhập để tạo Subscription.')
+            return
+        }
+
+        const user = session.user
+        const now = selectedDate
+        const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
+
+        const defaultData = {
+            name: '',
+            password: '',
+            note: '',
+            history: {
+                [monthKey]: {
+                    amount: 0,
+                    members: []
+                }
+            }
+        }
+
+        const { error: insertError } = await supabase.from('subscriptions').insert({
+            id: code,
+            owner_id: user.id,
+            name: '',
+            password: '',
+            note: '',
+            data: defaultData,
+            created_at: new Date().toISOString(),
+            registered_at: now.toISOString(),
+            last_edited_at: new Date().toISOString(),
+            last_edited_by: user.id + '|' + user.email,
+        })
+
+        if (insertError) {
+            setError(`❌ Lỗi khi tạo subscription: ${insertError.message}`)
+            return
+        }
+
+        router.push(`/manage/${code}?type=${type}`)
     }
+
+
 
     return (
         <div className="flex justify-center items-center px-4 min-h-screen text-center">
@@ -119,12 +128,26 @@ export default function CreatePage() {
                         <h2 className="font-bold text-2xl">Một bước nữa, hãy chọn loại đăng ký nhé!</h2>
 
                         {code && (
-                            <>
+                            <div className="space-y-6 text-left justify-items-center max-w-sm mx-auto">
+                                {/* Ngày đăng ký */}
+                                <div className="space-y-1">
+                                    <label htmlFor="reg-date" className="block text-sm font-medium">
+                                        Ngày đăng ký
+                                    </label>
+                                    <DatePicker
+                                        id="reg-date"
+                                        selected={selectedDate}
+                                        onChange={(date: Date | null) => date && setSelectedDate(date)}
+                                        dateFormat="yyyy-MM-dd"
+                                        className="w-full border  rounded px-3 py-2   focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
 
+                                {/* Loại đăng ký */}
+                                <div className="space-y-1">
 
-                                <div className="space-y-2 text-left">
-                                    <div className="flex justify-center items-center gap-4">
-                                        <label className="flex items-center gap-2">
+                                    <div className="flex items-center gap-6 mt-1">
+                                        <label className="flex items-center gap-2 text-sm">
                                             <input
                                                 type="radio"
                                                 name="type"
@@ -132,9 +155,9 @@ export default function CreatePage() {
                                                 checked={type === 'month'}
                                                 onChange={() => setType('month')}
                                             />
-                                            <span>Tháng</span>
+                                            <span>Đăng ký mỗi tháng</span>
                                         </label>
-                                        <label className="flex items-center gap-2">
+                                        <label className="flex items-center gap-2 text-sm">
                                             <input
                                                 type="radio"
                                                 name="type"
@@ -142,19 +165,23 @@ export default function CreatePage() {
                                                 checked={type === 'year'}
                                                 onChange={() => setType('year')}
                                             />
-                                            <span>Năm</span>
+                                            <span>Đăng ký mỗi năm</span>
                                         </label>
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={handleNext}
-                                    className="flex justify-center items-center bg-blue-600 hover:bg-blue-700 mx-auto mt-4 rounded-full w-14 h-14 text-white transition"
-                                    title="Tiếp tục"
-                                >
-                                    <FaArrowRight />
-                                </button>
-                            </>
+                                {/* Nút tiếp tục */}
+                                <div className="flex justify-center">
+                                    <button
+                                        onClick={handleNext}
+                                        className="flex justify-center items-center bg-blue-600 hover:bg-blue-700 rounded-full w-14 h-14 text-white shadow-md transition"
+                                        title="Tiếp tục"
+                                    >
+                                        <FaArrowRight />
+                                    </button>
+                                </div>
+                            </div>
+
                         )}
 
                         {!code && (

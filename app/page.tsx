@@ -38,7 +38,7 @@ export default function HomePage() {
       // 1. Lấy danh sách subscription mà user sở hữu
       const { data: owned, error: ownedError } = await supabase
         .from('subscriptions')
-        .select('id, name, created_at, password')
+        .select('id, name, created_at,registered_at, password')
         .eq('owner_id', session.user.id)
 
       // 2. Lấy các subscription mà user được mời làm editor
@@ -114,7 +114,7 @@ export default function HomePage() {
 
   return (
     <main className="relative flex flex-col justify-center items-center space-y-10 px-6 min-h-screen overflow-hidden">
-      <div className="-z-10 absolute inset-0 bg-gradient-to-br from-blue-300 via-pink-200 to-yellow-200 opacity-20 dark:opacity-10 blur-3xl animate-gradient" />
+      <div className="-z-10 absolute inset-0 opacity-20 dark:opacity-10 blur-3xl animate-gradient" />
       <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
       {session ? (
         <div className="flex flex-col items-center gap-3">
@@ -174,7 +174,7 @@ export default function HomePage() {
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="🔍 Tìm theo tên hoặc mã subscription..."
-                  className="bg-white dark:bg-zinc-900 mb-4 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                  className=" mb-4 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
                 />
                 <ul className="space-y-3">
                   {subs.filter(sub => {
@@ -193,7 +193,7 @@ export default function HomePage() {
                         )}
                         {sub.created_at && (
                           <div className="mt-1 text-gray-500 text-sm">
-                            📅 Ngày đăng ký: {new Date(sub.created_at).toLocaleDateString('vi-VN')}
+                            📅 Ngày đăng ký: {new Date(sub.registered_at).toLocaleDateString('vi-VN')}
                           </div>
                         )}
                       </div>
