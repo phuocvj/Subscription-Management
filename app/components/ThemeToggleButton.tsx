@@ -7,6 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
+// Extend Window interface to include the myConfettiBoom property
+declare global {
+  interface Window {
+    myConfettiBoom?: () => void;
+  }
+}
+
 export default function ThemeToggleButton() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
