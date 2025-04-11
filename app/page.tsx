@@ -19,13 +19,7 @@ export default function HomePage() {
   const [redirectTo, setRedirectTo] = useState('')
   const [searchText, setSearchText] = useState('')
 
-  useEffect(() => {
-    const redirectUrl =
-      window.location.hostname === 'localhost'
-        ? 'http://localhost:3000'
-        : 'https://subs.info.vn'
-    setRedirectTo(redirectUrl)
-  }, [])
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -92,6 +86,10 @@ export default function HomePage() {
   }, [session])
 
   const signInWithGoogle = async () => {
+    const redirectTo =
+      window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
+        : 'https://subs.info.vn'
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

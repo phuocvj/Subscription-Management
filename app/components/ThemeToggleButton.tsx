@@ -4,6 +4,7 @@ import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
 import { FaSun, FaMoon, FaAdjust } from 'react-icons/fa'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useConfettiBoom } from '../hook/useConfettiBoom'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
@@ -18,6 +19,7 @@ export default function ThemeToggleButton() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const boom = useConfettiBoom()
 
   useEffect(() => {
     setMounted(true)
@@ -39,8 +41,7 @@ export default function ThemeToggleButton() {
     const next = getNextTheme(theme as ThemeMode)
     setTheme(next)
 
-    // 🎉 Gọi confetti toàn màn hình
-    window.myConfettiBoom?.()
+    boom()
   }
 
   if (!mounted) return null
