@@ -488,7 +488,7 @@ export default function ManageSubscriptionPage() {
     }
     if (showPasswordPrompt) {
         return (
-            <div className="z-50 fixed inset-0 flex justify-center items-center bg-blue-900 bg-opacity-80 backdrop-blur-sm animate-fade-in">
+            <div className="z-50 fixed inset-0 flex justify-center items-center   bg-opacity-80 backdrop-blur-sm animate-fade-in">
                 <div className="  shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                     <div className="flex items-center gap-3 mb-4">
                         <span className="text-3xl">🔐</span>
