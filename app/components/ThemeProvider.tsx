@@ -1,21 +1,13 @@
-// components/ThemeProvider.tsx
+// app/providers.tsx (Next.js App Router)
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ThemeProvider } from 'next-themes'
+import { ReactNode } from 'react'
 
-export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark')
-      setTheme('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      setTheme('light')
-    }
-  }, [])
-
-  return <>{children}</>
+export function Providers({ children }: { children: ReactNode }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      {children}
+    </ThemeProvider>
+  )
 }

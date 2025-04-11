@@ -1,69 +1,68 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useModeAnimation, ThemeAnimationType } from 'react-theme-switch-animation'
-import { motion } from 'framer-motion'
+import { useTheme } from 'next-themes'
+import { useEffect, useRef, useState } from 'react'
 import { FaSun, FaMoon, FaAdjust } from 'react-icons/fa'
+import { motion, AnimatePresence } from 'framer-motion'
 
-type ThemeMode = 'light' | 'dark' | 'auto'
+type ThemeMode = 'light' | 'dark' | 'system'
 
 export default function ThemeToggleButton() {
-  const [theme, setTheme] = useState<ThemeMode>('auto')
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
-
-  const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
-    animationType: ThemeAnimationType.BLUR_CIRCLE,
-    blurAmount: 1, // Optional: adjust blur intensity
-    duration: 1000, // Optional: adjust animation duration
-  })
-
+  const { theme, setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    const saved = (localStorage.getItem('theme') as ThemeMode) || 'auto'
-    setTheme(saved)
+    setMounted(true)
   }, [])
 
-
-  const nextTheme = (current: ThemeMode): ThemeMode => {
+  const getNextTheme = (current: ThemeMode): ThemeMode => {
     switch (current) {
       case 'light':
         return 'dark'
       case 'dark':
-        return 'auto'
+        return 'system'
       default:
         return 'light'
     }
   }
 
-  const toggleTheme = () => {
-    const newTheme = nextTheme(theme)
-    setTheme(newTheme)
-    localStorage.setItem('theme', newTheme)
-    toggleSwitchTheme()
+  const handleToggle = () => {
+    if (!theme) return
+    const next = getNextTheme(theme as ThemeMode)
+    setTheme(next)
+
+    // 🎉 Gọi confetti toàn màn hình
+    window.myConfettiBoom?.()
   }
 
-  const renderIcon = () => {
-    switch (theme) {
-      case 'light':
-        return <FaSun />
-      case 'dark':
-        return <FaMoon />
-      default:
-        return <FaAdjust />
-    }
-  }
+  if (!mounted) return null
+
+  const currentTheme = theme === 'system' ? resolvedTheme : theme
+  const currentIcon =
+    theme === 'system' ? <FaAdjust /> :
+      currentTheme === 'light' ? <FaSun /> :
+        <FaMoon />
 
   return (
     <motion.button
-      ref={ref}
-      onClick={toggleTheme}
-      whileTap={{ rotate: 180, scale: 0.9 }}
-      animate={{ rotate: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      ref={buttonRef}
+      onClick={handleToggle}
+      whileTap={{ scale: 0.9 }}
       className="z-50 relative bg-gray-200 dark:bg-zinc-800 p-4 rounded-full text-yellow-600 dark:text-yellow-200 text-2xl hover:scale-110 transition"
-      title={`Chế độ giao diện: ${theme}`}
+      title={`Chế độ: ${theme}`}
     >
-      {renderIcon()}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={theme}
+          initial={{ opacity: 0, rotate: -90 }}
+          animate={{ opacity: 1, rotate: 0 }}
+          exit={{ opacity: 0, rotate: 90 }}
+          transition={{ duration: 0.5 }}
+        >
+          {currentIcon}
+        </motion.div>
+      </AnimatePresence>
     </motion.button>
   )
 }
