@@ -67,6 +67,9 @@ export default function ManageSubscriptionPage() {
     const [passwordError, setPasswordError] = useState('')
     const [rawRow, setRawRow] = useState<any>(null)
 
+    const [confirmCode, setConfirmCode] = useState('')
+    const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+
     const router = useRouter()
     const subscriptionRowRaw = useRef<any>(null)
 
@@ -343,8 +346,7 @@ export default function ManageSubscriptionPage() {
     }
 
     const handleDeleteSubscription = async () => {
-        if (!isEditable) return
-        if (!window.confirm('Bạn có chắc muốn huỷ subscription này không?')) return
+        if (!isEditable || confirmCode !== code) return
         await supabase.from('subscriptions').delete().eq('id', code)
         router.push('/')
     }
@@ -486,7 +488,7 @@ export default function ManageSubscriptionPage() {
     }
     if (showPasswordPrompt) {
         return (
-            <div className="z-50 fixed inset-0 flex justify-center items-center  bg-opacity-50 backdrop-blur-sm animate-fade-in">
+            <div className="z-50 fixed inset-0 flex justify-center items-center bg-blue-900 bg-opacity-80 backdrop-blur-sm animate-fade-in">
                 <div className="  shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                     <div className="flex items-center gap-3 mb-4">
                         <span className="text-3xl">🔐</span>
@@ -573,7 +575,7 @@ export default function ManageSubscriptionPage() {
             <div className="flex items-center gap-3 mt-2">
                 <button
                     onClick={() => router.push('/')}
-                    className="flex items-center gap-2 bg-blue-100 px-3 py-1 rounded-md text-blue-800 dark:text-white hover:scale-105 transition"
+                    className="flex items-center gap-2  px-3 py-1 rounded-md hover:scale-105 transition"
                 >
                     <FaCalendarAlt /> Trang chủ
                 </button>
@@ -610,7 +612,8 @@ export default function ManageSubscriptionPage() {
                     </button>
                 </div>
             )}
-            <div>
+            <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
+
                 <label className="block mb-1 font-medium">📛 Tên Subscription</label>
                 <input
                     disabled={!isEditable}
@@ -621,7 +624,7 @@ export default function ManageSubscriptionPage() {
                 />
             </div>
 
-            {isEditable && (<div>
+            {isEditable && (<div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
                 <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
                 <input
                     disabled={!isEditable}
@@ -631,9 +634,8 @@ export default function ManageSubscriptionPage() {
                     className="disabled:opacity-60 px-3 py-2 border rounded w-full"
                     placeholder="Nhập mật khẩu nếu cần"
                 />
-            </div>)}
 
-            {isEditable && (<div>
+
                 <label className="block mb-1 font-medium">📝 Ghi chú (tuỳ chọn)</label>
                 <TextareaAutosize
                     minRows={2}
@@ -645,7 +647,8 @@ export default function ManageSubscriptionPage() {
                 />
             </div>)}
 
-            <div>
+            <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-3">
+
                 <label className="block mb-2 font-semibold text-lg">
                     {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
                 </label>
@@ -679,67 +682,69 @@ export default function ManageSubscriptionPage() {
 
 
 
-            {isEditable && (<div>
-                <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
-                <input
-                    type="text"
-                    inputMode="numeric"
-                    disabled={!isEditable}
-                    value={formattedAmount}
-                    onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, '') // chỉ giữ số
-                        const amount = Number(raw)
-                        setNewAmount(amount)
+            {isEditable && (
+                <div className="rounded-2xl shadow-lg backdrop-blur-md  p-4 space-y-4">
 
-                        const members = subscription?.history[currentMonth]?.members || []
-                        const perPerson = members.length > 0 ? +(amount / members.length).toFixed(0) : 0
-                        const updatedMembers = members.map(m => ({ ...m, amount: perPerson }))
-
-                        if (subscription) {
-                            setSubscription({
-                                ...subscription,
-                                history: {
-                                    ...subscription.history,
-                                    [currentMonth]: {
-                                        amount,
-                                        members: updatedMembers
-                                    }
-                                }
-                            })
-                        }
-                    }}
-                    placeholder="Nhập số tiền"
-                    className="disabled:opacity-60 px-4 py-2 border rounded w-full text-base"
-                />
-            </div>)}
-
-            {isEditable && (<div>
-                <label className="block mb-1 font-medium">👥 Thêm thành viên</label>
-                <div className="flex gap-2">
+                    <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                     <input
+                        type="text"
+                        inputMode="numeric"
                         disabled={!isEditable}
-                        value={newMember}
-                        onChange={e => setNewMember(e.target.value)}
-                        placeholder="Tên thành viên"
-                        className="flex-1 disabled:opacity-60 px-4 py-2 border rounded-md text-base"
+                        value={formattedAmount}
+                        onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, '') // chỉ giữ số
+                            const amount = Number(raw)
+                            setNewAmount(amount)
+
+                            const members = subscription?.history[currentMonth]?.members || []
+                            const perPerson = members.length > 0 ? +(amount / members.length).toFixed(0) : 0
+                            const updatedMembers = members.map(m => ({ ...m, amount: perPerson }))
+
+                            if (subscription) {
+                                setSubscription({
+                                    ...subscription,
+                                    history: {
+                                        ...subscription.history,
+                                        [currentMonth]: {
+                                            amount,
+                                            members: updatedMembers
+                                        }
+                                    }
+                                })
+                            }
+                        }}
+                        placeholder="Nhập số tiền"
+                        className="disabled:opacity-60 px-4 py-2 border rounded w-full text-base"
                     />
-                    <button
-                        disabled={!isEditable}
-                        onClick={addMember}
-                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-md text-white text-base"
-                    >
-                        <FaPlus className="text-lg" /> Thêm
-                    </button>
-                </div>
-            </div>)}
+                    <div>
+                        <label className="block mb-1 font-medium">👥 Thêm thành viên</label>
+                        <div className="flex gap-2">
+                            <input
+                                disabled={!isEditable}
+                                value={newMember}
+                                onChange={e => setNewMember(e.target.value)}
+                                placeholder="Tên thành viên"
+                                className="flex-1 disabled:opacity-60 px-4 py-2 border rounded-md text-base"
+                            />
+                            <button
+                                disabled={!isEditable}
+                                onClick={addMember}
+                                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-md "
+                            >
+                                <FaPlus className="text-lg" /> Thêm
+                            </button>
+                        </div>
+                    </div>
+                </div>)}
+
 
             <div>
 
                 <h2 className="flex items-center gap-2 mb-2 font-semibold text-lg">
                     <FaUserFriends className="text-green-600" /> Danh sách tháng {currentMonth}
                 </h2>
-                <div className="flex justify-between items-center mb-2 text-gray-600 text-sm">
-                    <div className="mb-2 text-gray-600 text-sm">
+                <div className="flex justify-between items-center mb-2  text-sm">
+                    <div className="mb-2  text-sm">
                         👥 Tổng thành viên: {current.members.length} / {
                             current.members.filter(m => m.paid).length
                         } đã đóng · 💸 Tổng thu: {
@@ -755,8 +760,7 @@ export default function ManageSubscriptionPage() {
                     {subscription.history[currentMonth].members.map((m, i) => (
                         <div
                             key={i}
-                            className={`flex flex-col gap-2 p-3 rounded-lg border shadow-sm transition duration-300
-                          ${highlightIndex === i ? 'bg-yellow-100 dark:bg-yellow-900' : ''}`}
+                            className={`rounded-xl  backdrop-blur-sm  shadow-md p-4 transition duration-300 ${highlightIndex === i ? 'border-l-4 border-yellow-400' : ''}`}
                         >
                             <div className="flex justify-between items-center gap-4">
                                 <div className="flex items-center gap-3">
@@ -767,7 +771,6 @@ export default function ManageSubscriptionPage() {
                                         <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
                                         {isEditable ? (
                                             <div className="relative w-28">
-
                                                 <input
                                                     type="text"
                                                     className="px-2 py-1 border rounded w-28 text-sm text-center"
@@ -775,11 +778,9 @@ export default function ManageSubscriptionPage() {
                                                     onChange={(e) => {
                                                         const raw = e.target.value.replace(/,/g, '')
                                                         const value = parseInt(raw || '0', 10)
-
                                                         const month = subscription.history[currentMonth]
                                                         const updatedMembers = [...month.members]
                                                         updatedMembers[i].amount = value
-
                                                         setSubscription({
                                                             ...subscription,
                                                             history: {
@@ -793,8 +794,7 @@ export default function ManageSubscriptionPage() {
                                                     }}
                                                     placeholder="0"
                                                 />
-                                                <span className="top-1/2 right-2 absolute text-sm -translate-y-1/2">₫</span>
-
+                                                <span className="absolute top-1/2 right-2 text-sm -translate-y-1/2">₫</span>
                                             </div>
                                         ) : (
                                             <div className="text-sm">{m.amount.toLocaleString('en-US')}₫</div>
@@ -811,7 +811,6 @@ export default function ManageSubscriptionPage() {
                                     </button>
                                 )}
                             </div>
-                            {/* 👇 Đây là phần mới: note nằm ở dưới, full width */}
                             {isEditable ? (
                                 <TextareaAutosize
                                     minRows={2}
@@ -835,21 +834,28 @@ export default function ManageSubscriptionPage() {
 
 
                 {isEditable && (
-                    <div className="flex gap-4 mt-6">
+                    <div className="mt-8 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                         <button
                             onClick={() => setShowCloneModal(true)}
-                            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white"
+                            className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-xl shadow transition"
                         >
-                            <FaMagic /> {subscription.subscription_type === 'year' ? 'Tạo 5 năm tiếp theo' : 'Tạo 12 tháng tiếp theo'}
+                            <FaMagic className="text-lg" />
+                            {subscription.subscription_type === 'year'
+                                ? 'Tạo 5 năm tiếp theo'
+                                : 'Tạo 12 tháng tiếp theo'}
                         </button>
-                        {isOwner && (<button
-                            onClick={handleDeleteSubscription}
-                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white"
-                        >
-                            <FaTrashAlt /> Huỷ subscription này
-                        </button>)}
+                        {isOwner && (
+                            <button
+                                onClick={() => setShowConfirmDelete(true)}
+                                className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl shadow transition"
+                            >
+                                <FaTrashAlt className="text-lg" />
+                                Huỷ subscription này
+                            </button>
+                        )}
                     </div>
                 )}
+
             </div>
 
             {showCloneModal && (
@@ -864,13 +870,13 @@ export default function ManageSubscriptionPage() {
 
 
             {invitePopup && (
-                <div className="z-50 fixed inset-0 flex justify-center items-center bg-blue-950 bg-opacity-50 backdrop-blur-sm text-white animate-fade-in">
+                <div className="z-50 fixed inset-0 flex justify-center items-center  bg-opacity-50 backdrop-blur-sm text-white animate-fade-in">
                     <div className="shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">📧</span>
                             <h2 className="font-bold text-xl">Mời người khác quản lý Subscription</h2>
                         </div>
-                        <p className="mb-3 text-gray-600 dark:text-gray-300 text-sm">
+                        <p className="mb-3  text-sm">
                             Nhập địa chỉ email Google của người được mời
                         </p>
                         <input
@@ -882,7 +888,7 @@ export default function ManageSubscriptionPage() {
                             autoFocus
                         />
                         <div className="flex justify-end gap-2">
-                            <button onClick={() => setInvitePopup(false)} className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-md transition">
+                            <button onClick={() => setInvitePopup(false)} className=" px-4 py-2 rounded-md transition">
                                 Huỷ
                             </button>
                             <button
@@ -927,7 +933,38 @@ export default function ManageSubscriptionPage() {
             )}
 
 
-
+            {showConfirmDelete && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center  bg-opacity-50 backdrop-blur-sm">
+                    <div className=" rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
+                        <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">Xác nhận huỷ Subscription</h2>
+                        <p className="mb-2 text-sm">
+                            Nhập mã subscription <span className="font-mono font-bold">{code}</span> để xác nhận xoá:
+                        </p>
+                        <input
+                            type="text"
+                            value={confirmCode}
+                            onChange={(e) => setConfirmCode(e.target.value)}
+                            placeholder="Nhập mã subscription..."
+                            className="px-4 py-2 border rounded w-full mb-4"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowConfirmDelete(false)}
+                                className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded"
+                            >
+                                Huỷ bỏ
+                            </button>
+                            <button
+                                disabled={confirmCode !== code}
+                                onClick={handleDeleteSubscription}
+                                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white disabled:opacity-50"
+                            >
+                                Xác nhận xoá
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
         </div>

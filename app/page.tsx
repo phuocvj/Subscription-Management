@@ -165,18 +165,18 @@ export default function HomePage() {
 
       {session && (
         <div className="gap-10 grid grid-cols-1 lg:grid-cols-3 mt-10 w-full max-w-6xl">
-          <div className="space-y-4 lg:col-span-2 shadow-md p-6 border-2 border-gray-300 dark:border-zinc-600 rounded-lg">
+          <div className="space-y-4 lg:col-span-2 shadow-md p-6 rounded-lg">
             {subs.length > 0 && (
-              <>
-                <h2 className="mb-4 font-semibold text-xl">📦 Các Subscription</h2>
+              <div className=" rounded-2xl">
+                <h2 className="mb-4 font-bold text-2xl flex items-center gap-2">📦 Các Subscription</h2>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="🔍 Tìm theo tên hoặc mã subscription..."
-                  className=" mb-4 px-4 py-2 border border-gray-300 dark:border-zinc-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
+                  className="mb-6 px-4 py-2  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-sm"
                 />
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {subs.filter(sub => {
                     const keyword = searchText.trim().toLowerCase()
                     return (
@@ -184,10 +184,14 @@ export default function HomePage() {
                       (sub.name && sub.name.toLowerCase().includes(keyword))
                     )
                   }).map(sub => (
-                    <li key={sub.id} className="flex justify-between items-center gap-4 shadow px-4 py-3 border rounded hover:scale-105 transition cursor-pointer" onClick={() => openSubscription(sub.id)}>
+                    <li
+                      key={sub.id}
+                      className="flex justify-between items-center gap-4 p-4 border rounded-xl shadow-sm bg-white/10  hover:scale-[1.01] transition cursor-pointer"
+                      onClick={() => openSubscription(sub.id)}
+                    >
                       <div className="flex-1">
-                        <div className="font-mono text-gray-500 text-sm">Mã: {sub.id}</div>
-                        <div className="font-semibold text-lg">{sub.name}</div>
+                        <div className="font-mono text-gray-500 text-xs">Mã: {sub.id}</div>
+                        <div className="font-semibold text-lg ">{sub.name}</div>
                         {invitedMap[sub.id] && (
                           <div className="text-yellow-600 text-sm">🔗 Được mời bởi: {invitedMap[sub.id]}</div>
                         )}
@@ -202,7 +206,7 @@ export default function HomePage() {
                         size={64}
                         bgColor="#ffffff"
                         fgColor="#000000"
-                        className="rounded cursor-zoom-in"
+                        className="rounded cursor-zoom-in shadow"
                         onClick={(e) => {
                           e.stopPropagation()
                           setQrCodeToShow(sub.id)
@@ -211,7 +215,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-              </>
+              </div>
             )}
           </div>
 
