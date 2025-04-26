@@ -9,7 +9,7 @@ import { useSubscriptions } from './hooks/useSubscriptions'
 import SubscriptionList from './components/SubscriptionList'
 import DonationBox from './components/DonationBox'
 import QRCodeModal from './components/QRCodeModal'
-import ThemeToggleButton from './components/ThemeToggleButton'
+import ThemeToggleButton from './components/DarkModeToggle'
 
 export default function HomePage() {
   const router = useRouter()
@@ -18,10 +18,10 @@ export default function HomePage() {
   const [qrCodeToShow, setQrCodeToShow] = useState<string | null>(null)
 
   return (
-    <main className="relative flex flex-col justify-center items-center space-y-10 px-6 min-h-screen overflow-hidden">
+    <main className="flex flex-col justify-center items-center space-y-10 p-2 w-full min-h-screen overflow-hidden">
       <div className="-z-10 absolute inset-0 opacity-20 dark:opacity-10 blur-3xl animate-gradient" />
       <h1 className="font-bold text-4xl text-center">📋 Subscription Manager</h1>
-      
+
       {session ? (
         <div className="flex flex-col items-center gap-3">
           <div className="flex flex-wrap justify-center gap-6">
@@ -52,7 +52,7 @@ export default function HomePage() {
             </span>
             <button
               onClick={signOut}
-              className="flex items-center gap-2 bg-blue-100 hover:bg-blue-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 shadow-sm hover:shadow-md px-4 py-2 rounded-md text-blue-600 dark:text-blue-400 transition-all"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-200 dark:from-blue-800 via-white dark:via-gray-900 to-blue-200 dark:to-blue-800 bg-opacity-60 shadow-sm hover:shadow-md backdrop-blur-md px-4 py-2 border border-blue-300 dark:border-blue-700 rounded-md text-blue-600 dark:text-blue-400 transition-all"
             >
               <FaSignOutAlt />
               Đăng xuất
@@ -69,19 +69,19 @@ export default function HomePage() {
 
       {session && (
         <div className="gap-10 grid grid-cols-1 lg:grid-cols-3 mt-10 w-full max-w-6xl">
-          <SubscriptionList 
-            subs={subs} 
-            invitedMap={invitedMap} 
-            onQrCodeClick={setQrCodeToShow} 
+          <SubscriptionList
+            subs={subs}
+            invitedMap={invitedMap}
+            onQrCodeClick={setQrCodeToShow}
           />
           <DonationBox />
         </div>
       )}
 
       {qrCodeToShow && (
-        <QRCodeModal 
-          subscriptionId={qrCodeToShow} 
-          onClose={() => setQrCodeToShow(null)} 
+        <QRCodeModal
+          subscriptionId={qrCodeToShow}
+          onClose={() => setQrCodeToShow(null)}
         />
       )}
     </main>

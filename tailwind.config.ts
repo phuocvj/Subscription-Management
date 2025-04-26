@@ -1,31 +1,15 @@
-// tailwind.config.ts
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
+  darkMode: 'class', // 👈 rất quan trọng!
   content: [
-    "./app/**/*.{js,ts,jsx,tsx}",
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
   ],
-  darkMode: "class", // ✅ Rất quan trọng nếu bạn dùng localStorage
   theme: {
-    extend: {
-      animation: {
-        gradient: 'gradient 8s ease infinite',
-      },
-      keyframes: {
-        gradient: {
-          '0%, 100%': {
-            backgroundPosition: '0% 50%',
-          },
-          '50%': {
-            backgroundPosition: '100% 50%',
-          },
-        },
-      },
-    },
+    extend: {}, // Không cần extend custom color
   },
   plugins: [],
-};
+}
 
-export default config;
+export default config

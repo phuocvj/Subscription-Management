@@ -1,18 +1,18 @@
 // app/layout.tsx
 import './globals.css'
-import { Inter } from 'next/font/google'
-import ThemeToggleButton from './components/ThemeToggleButton'
-import { Providers } from './components/ThemeProvider'
-import ThemeTransitionOverlay from './components/ThemeTransitionOverlay'
-import ConfettiCanvas from './components/ConfettiCanvas'
-import Sidebar from './components/Sidebar'
+import { Geist, Geist_Mono, Inter } from 'next/font/google'
+import DarkModeToggle from './components/DarkModeToggle'
+import { ThemeProvider } from './components/ThemeProvider'
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-inter',
-})
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 export const metadata = {
   title: 'Subscription Manager',
   description: 'Quản lý subscription dễ dàng cùng team!'
@@ -20,28 +20,16 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} `} >
-      <body className="font-sans transition-colors duration-300">
-        <Providers>
-          <ThemeTransitionOverlay />
-          {/* <ConfettiCanvas /> */}
+    <html lang="en" suppressHydrationWarning className="dark">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
 
-          {/* <Sidebar /> */}
-
-          {/* Main content */}
-          <div className="ml-0 md:ml-16 pl-6 transition-all duration-300">
-            <div className="z-10 relative px-4 py-6">
-              {children}
-            </div>
-          </div>
-
-          {/* 🔥 Nút ở giữa cạnh phải */}
-          <div className="right-10 bottom-2 z-50 fixed -translate-y-1/2 transform">
-            <ThemeToggleButton />
-          </div>
-        </Providers>
+          <main className='flex justify-center items-center bg-gradient-to-br dark:bg-gradient-to-br from-indigo-600 dark:from-gray-900 via-purple-600 dark:via-gray-800 to-pink-500 dark:to-gray-900 px-6 py-12 w-full min-h-screen transition-colors duration-500'>{children}
+          </main>
+        </ThemeProvider>
+        <DarkModeToggle />
       </body>
-    </html >
-  )
+    </html>
+  );
 }
 

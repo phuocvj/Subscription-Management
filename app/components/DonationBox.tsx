@@ -36,6 +36,13 @@ export default function DonationBox() {
         </div>
       </div>
 
+      {/* ✨ Glassmorphism Contact Info */}
+      <div className="mt-8 w-full">
+        <div className="bg-white/30 dark:bg-black/30 shadow-lg backdrop-blur-md p-4 rounded-xl text-gray-700 dark:text-gray-300 text-sm text-center">
+          Mọi chi tiết đóng góp xin liên hệ <a href="mailto:lebaokhaky@gmail.com" className="font-semibold underline">lebaokhaky@gmail.com</a>
+        </div>
+      </div>
+
       {showZoomQRDonation && (
         <div
           className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-60 backdrop-blur-sm"
@@ -62,4 +69,4 @@ export default function DonationBox() {
       )}
     </div>
   )
-} 
+}

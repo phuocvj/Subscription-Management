@@ -69,6 +69,7 @@ export default function ManageSubscriptionPage() {
 
     const [confirmCode, setConfirmCode] = useState('')
     const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+    const [rememberPassword, setRememberPassword] = useState(false)
 
     const router = useRouter()
     const subscriptionRowRaw = useRef<any>(null)
@@ -124,12 +125,20 @@ export default function ManageSubscriptionPage() {
 
                 setOwnerId(row.owner_id || null)
 
+
                 // 👇 Nếu subscription đã có, chỉ cần lấy dữ liệu và cập nhật lại
                 setRawRow(row) // 👉 Lưu lại toàn bộ row để sau này dùng mật khẩu
 
                 // 👇 Nếu chưa đăng nhập mà subscription có mật khẩu → yêu cầu nhập
                 if (!userId && row.password) {
-                    setShowPasswordPrompt(true)
+
+                    const remembered = JSON.parse(localStorage.getItem('subscription_remember') || '{}')
+                    if (!remembered[code]) {
+                        // Nếu chưa nhớ mật khẩu → yêu cầu nhập
+                        setShowPasswordPrompt(true)
+                        return // ⛔ Stop luôn không load tiếp data
+                    }
+
                     return // ⛔ Không load tiếp nếu chưa xác minh
                 }
                 data = {
@@ -488,36 +497,57 @@ export default function ManageSubscriptionPage() {
     }
     if (showPasswordPrompt) {
         return (
-            <div className="z-50 fixed inset-0 flex justify-center items-center bg-opacity-80 backdrop-blur-sm animate-fade-in">
-                <div className="shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
-                    <div className="flex items-center gap-3 mb-4">
+            <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm">
+                <div className="space-y-6 bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md mx-auto p-6 border border-white/30 dark:border-white/20 rounded-2xl w-full max-w-md animate-scale-fade-in">
+
+                    <div className="flex items-center gap-3">
                         <span className="text-3xl">🔐</span>
-                        <h2 className="font-bold text-xl">
-                            Nhập mật khẩu để mở Subscription
-                        </h2>
+                        <h2 className="font-bold text-2xl">Nhập mật khẩu để mở Subscription</h2>
                     </div>
-                    <p className="mb-3 text-sm">
-                        Subscription <span className="font-mono">{params.id}</span> đang được bảo vệ.
+
+                    <p className="text-gray-700 dark:text-gray-300 text-sm">
+                        Subscription <span className="font-mono font-semibold">{params.id}</span> đang được bảo vệ.
                     </p>
+
                     <input
                         type="password"
                         value={inputPassword}
                         onChange={(e) => setInputPassword(e.target.value)}
-                        className="mb-4 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                        className="bg-white/40 dark:bg-white/10 backdrop-blur-md px-4 py-2 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 w-full text-black dark:text-white"
                         placeholder="Nhập mật khẩu..."
                         autoFocus
                     />
-                    {passwordError && <p className="mb-2 text-red-500 text-sm">{passwordError}</p>}
-                    <div className="flex justify-end gap-2">
+
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="rememberPassword"
+                            checked={rememberPassword}
+                            onChange={(e) => setRememberPassword(e.target.checked)}
+                            className="w-4 h-4"
+                        />
+                        <label htmlFor="rememberPassword" className="dark:text-gray-300 text-sm">Ghi nhớ cho lần sau</label>
+                    </div>
+
+                    {passwordError && (
+                        <p className="text-red-500 text-sm">{passwordError}</p>
+                    )}
+
+                    <div className="flex justify-end gap-3">
                         <button
-                            className="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-4 py-2 rounded-md text-gray-900 dark:text-gray-100 transition"
                             onClick={() => router.push('/')}
+                            className="bg-white/30 hover:bg-white/40 dark:bg-white/10 dark:hover:bg-white/20 px-4 py-2 border border-white/30 rounded-lg font-semibold text-gray-900 dark:text-white transition"
                         >
                             Huỷ
                         </button>
                         <button
                             onClick={() => {
                                 if (inputPassword === rawRow?.password) {
+                                    if (rememberPassword) {
+                                        const remembered = JSON.parse(localStorage.getItem('subscription_remember') || '{}')
+                                        remembered[code] = true
+                                        localStorage.setItem('subscription_remember', JSON.stringify(remembered))
+                                    }
                                     setShowPasswordPrompt(false)
                                     const now = new Date()
                                     const displayKey = subscriptionType === 'year'
@@ -538,19 +568,20 @@ export default function ManageSubscriptionPage() {
                                         note: rawRow.note ?? '',
                                         subscription_type: subscriptionType,
                                     }
-
                                     setSubscription(data)
                                 } else {
                                     setPasswordError('❌ Sai mật khẩu. Vui lòng thử lại.')
                                 }
                             }}
-                            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-white transition"
+                            className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-lg font-semibold text-white transition"
                         >
                             Mở khoá
                         </button>
                     </div>
+
                 </div>
             </div>
+
         )
     }
     if (!subscription || !currentMonth || !subscription.history[currentMonth])
@@ -564,7 +595,7 @@ export default function ManageSubscriptionPage() {
 
     // phần render mới với phân quyền isEditable
     return (
-        <div className="space-y-6 dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] mx-auto p-6 max-w-3xl">
+        <div className="space-y-6 bg-gradient-to-br from-white/20 dark:from-gray-800 via-gray-100/25 dark:via-gray-900/20 to-gray-200/20 dark:to-black shadow-md dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] backdrop-blur-md mx-auto p-6 rounded-lg">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
                 <FaLayerGroup className="text-blue-600" /> Subscription {code}
             </h1>
@@ -572,23 +603,26 @@ export default function ManageSubscriptionPage() {
                 <FaMagic className="text-blue-600" /> {/* Thêm icon ở đây */}
                 {subscriptionType === "month" ? "Đăng ký mỗi tháng" : "Đăng ký mỗi năm"}
             </h2>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-4">
                 <button
                     onClick={() => router.push('/')}
-                    className="flex items-center gap-2 px-3 py-1 rounded-md hover:scale-105 transition"
+                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-sm backdrop-blur-md px-4 py-2 border border-white/30 dark:border-white/20 rounded-lg font-semibold text-gray-900 dark:text-white hover:scale-105 transition-all"
                 >
-                    <FaCalendarAlt /> Trang chủ
+                    <FaCalendarAlt className="text-blue-600" />
+                    Trang chủ
                 </button>
 
                 {isEditable && isOwner && (
                     <button
                         onClick={() => setInvitePopup(true)}
-                        className="flex items-center gap-2 px-3 py-1 rounded-md text-indigo-800 hover:scale-105 transition"
+                        className="flex items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-sm backdrop-blur-md px-4 py-2 border border-white/30 dark:border-white/20 rounded-lg font-semibold text-indigo-600 dark:text-indigo-300 hover:scale-105 transition-all"
                     >
-                        <FaUserPlus /> Mời quản lý
+                        <FaUserPlus className="text-indigo-500" />
+                        Mời quản lý
                     </button>
                 )}
             </div>
+
             {pendingInvite && (
                 <div className="flex justify-between items-center bg-yellow-100 dark:bg-yellow-900 shadow p-4 rounded-lg text-sm">
                     <span>📩 Bạn đã được mời quản lý subscription này. Nhấn để xác nhận và có quyền chỉnh sửa.</span>
@@ -612,7 +646,7 @@ export default function ManageSubscriptionPage() {
                     </button>
                 </div>
             )}
-            <div className="space-y-3 shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md p-4 rounded-2xl">
+            <div className="space-y-3 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
 
                 <label className="block mb-1 font-medium">📛 Tên Subscription</label>
                 <input
@@ -624,7 +658,7 @@ export default function ManageSubscriptionPage() {
                 />
             </div>
 
-            {isEditable && (<div className="space-y-3 shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md p-4 rounded-2xl">
+            {isEditable && (<div className="space-y-3 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
                 <label className="block mb-1 font-medium">🔐 Mật khẩu (tuỳ chọn)</label>
                 <input
                     disabled={!isEditable}
@@ -647,7 +681,7 @@ export default function ManageSubscriptionPage() {
                 />
             </div>)}
 
-            <div className="space-y-3 shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md p-4 rounded-2xl">
+            <div className="space-y-3 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
 
                 <label className="block mb-2 font-semibold text-lg">
                     {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
@@ -667,10 +701,10 @@ export default function ManageSubscriptionPage() {
                             <button
                                 key={month}
                                 onClick={() => switchMonth(month)}
-                                className={`w-full flex items-center justify-center gap-1 px-4 py-2 rounded-md shadow-sm transition-all border
+                                className={`w-full flex items-center justify-center gap-1 px-4 py-2 rounded-md shadow-sm text-sm transition-all border
                         ${month === currentMonth
-                                        ? 'bg-blue-900  border-2  font-semibold border-amber-300 scale-105'
-                                        : '    hover:bg-blue-100  border-gray-300'
+                                        ? 'bg-pink-500 dark:bg-yellow-300 dark:text-black text-white  border-2  font-semibold border-amber-300 dark:border-pink-500 scale-105 text-sm'
+                                        : '    hover:bg-blue-500  '
                                     }`}
                             >
                                 📅 {month}
@@ -683,7 +717,7 @@ export default function ManageSubscriptionPage() {
 
 
             {isEditable && (
-                <div className="space-y-4 shadow-lg dark:shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-md p-4 rounded-2xl">
+                <div className="space-y-4 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
 
                     <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                     <input
@@ -760,20 +794,20 @@ export default function ManageSubscriptionPage() {
                     {subscription.history[currentMonth].members.map((m, i) => (
                         <div
                             key={i}
-                            className={`rounded-xl  backdrop-blur-sm  shadow-md p-4 transition duration-300 ${highlightIndex === i ? 'border-l-4 border-yellow-400' : ''}`}
+                            className={`rounded-xl border-2 backdrop-blur-sm  shadow-md p-4 transition duration-300 ${highlightIndex === i ? 'border-l-4 border-yellow-400' : ''}`}
                         >
                             <div className="flex justify-between items-center gap-4">
                                 <div className="flex items-center gap-3">
                                     <button onClick={() => togglePaid(i)} disabled={!isEditable}>
-                                        {m.paid ? <FaCheckCircle className="text-green-500" /> : <FaRegCircle className="text-gray-400" />}
+                                        {m.paid ? <FaCheckCircle className="text-blue-600 text-2xl" /> : <FaRegCircle className="text-gray-400" />}
                                     </button>
                                     <div>
-                                        <div className={`font-medium ${m.paid ? 'line-through text-green-600' : ''}`}>{m.name}</div>
+                                        <div className={`font-mono ${m.paid ? 'line-through text-blue-600 dark:text-white font-bold' : ''}`}>{m.name}</div>
                                         {isEditable ? (
                                             <div className="relative w-28">
                                                 <input
                                                     type="text"
-                                                    className="px-2 py-1 border rounded w-28 text-sm text-center"
+                                                    className="px-2 py-1 border rounded w-28 font-mono font-bold text-sm text-center"
                                                     value={m.amount === 0 ? '' : m.amount.toLocaleString('en-US')}
                                                     onChange={(e) => {
                                                         const raw = e.target.value.replace(/,/g, '')
@@ -819,11 +853,11 @@ export default function ManageSubscriptionPage() {
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú..."
-                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full overflow-hidden text-sm transition-all resize-none"
+                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full overflow-hidden text-md text-yellow-300 dark:text-white transition-all resize-none"
                                 />
                             ) : (
                                 m.note && (
-                                    <div className="mt-2 text-gray-500 text-sm italic">
+                                    <div className="mt-2 text-black dark:text-white text-sm italic">
                                         📝 {m.note}
                                     </div>
                                 )
@@ -834,26 +868,28 @@ export default function ManageSubscriptionPage() {
 
 
                 {isEditable && (
-                    <div className="flex sm:flex-row flex-col sm:items-center gap-3 sm:gap-4 mt-8">
+                    <div className="flex sm:flex-row-reverse flex-col items-end sm:items-center gap-3 sm:gap-4 mt-8">
                         <button
                             onClick={() => setShowCloneModal(true)}
-                            className="flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-700 shadow px-5 py-2.5 rounded-xl text-white transition"
+                            className="flex justify-center items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-lg backdrop-blur-md px-5 py-2.5 border border-white/30 rounded-xl font-semibold text-purple-700 dark:text-purple-300 transition"
                         >
                             <FaMagic className="text-lg" />
                             {subscription.subscription_type === 'year'
                                 ? 'Tạo 5 năm tiếp theo'
                                 : 'Tạo 12 tháng tiếp theo'}
                         </button>
+
                         {isOwner && (
                             <button
                                 onClick={() => setShowConfirmDelete(true)}
-                                className="flex justify-center items-center gap-2 bg-red-600 hover:bg-red-700 shadow px-5 py-2.5 rounded-xl text-white transition"
+                                className="flex justify-center items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-lg backdrop-blur-md px-5 py-2.5 border border-white/30 rounded-xl font-semibold text-red-600 dark:text-red-400 transition"
                             >
                                 <FaTrashAlt className="text-lg" />
                                 Huỷ subscription này
                             </button>
                         )}
                     </div>
+
                 )}
 
             </div>
@@ -867,11 +903,11 @@ export default function ManageSubscriptionPage() {
                     onCreate={handleCloneNextPeriods}
                 />
             )}
-
+ 
 
             {invitePopup && (
-                <div className="z-50 fixed inset-0 flex justify-center items-center bg-opacity-50 backdrop-blur-sm text-white animate-fade-in">
-                    <div className="shadow-2xl p-6 rounded-2xl w-96 transition-all animate-popup-zoom duration-300">
+                <div className="z-50 fixed inset-0 flex justify-center items-center backdrop-blur-sm text-white animate-fade-in">
+                    <div className="bg-white dark:bg-gray-700 shadow-2xl p-6 rounded-2xl w-96 text-black dark:text-white transition-all animate-popup-zoom duration-300">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="text-3xl">📧</span>
                             <h2 className="font-bold text-xl">Mời người khác quản lý Subscription</h2>
@@ -886,7 +922,7 @@ export default function ManageSubscriptionPage() {
                             className="mb-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full"
                             placeholder="example@gmail.com"
                             autoFocus
-                        />
+                        /> 
                         <div className="flex justify-end gap-2">
                             <button onClick={() => setInvitePopup(false)} className="px-4 py-2 rounded-md transition">
                                 Huỷ
