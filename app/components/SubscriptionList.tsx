@@ -18,10 +18,10 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
   }
 
   return (
-    <div className="space-y-4 lg:col-span-2 shadow-md dark:bg-amber-400 p-6 rounded-lg">
+    <div className="space-y-4 lg:col-span-2 shadow-md p-6 rounded-lg">
       {subs.length > 0 && (
         <div className="rounded-2xl">
-          <h2 className="mb-4 font-bold text-2xl flex items-center gap-2">📦 Các Subscription</h2>
+          <h2 className="flex items-center gap-2 mb-4 font-bold text-2xl">📦 Các Subscription</h2>
           <input
             type="text"
             value={searchText}
@@ -39,7 +39,7 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
             }).map(sub => (
               <li
                 key={sub.id}
-                className="flex justify-between items-center gap-4 p-4 border rounded-xl shadow-sm bg-white/10 hover:scale-[1.01] transition cursor-pointer"
+                className="flex justify-between items-center gap-4 bg-white/10 shadow-sm p-4 border rounded-xl hover:scale-[1.01] transition cursor-pointer"
                 onClick={() => openSubscription(sub.id)}
               >
                 <div className="flex-1">
@@ -64,7 +64,7 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
                   size={64}
                   bgColor="#ffffff"
                   fgColor="#000000"
-                  className="rounded cursor-zoom-in shadow"
+                  className="shadow rounded cursor-zoom-in"
                   onClick={(e) => {
                     e.stopPropagation()
                     onQrCodeClick(sub.id)

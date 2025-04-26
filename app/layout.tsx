@@ -20,7 +20,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} dark:bg-yellow-900`} >
+    <html lang="en" className={`${inter.variable} `} >
       <body className="font-sans transition-colors duration-300">
         <Providers>
           <ThemeTransitionOverlay />
@@ -30,13 +30,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
           {/* Main content */}
           <div className="ml-0 md:ml-16 pl-6 transition-all duration-300">
-            <div className="relative z-10 px-4 py-6">
+            <div className="z-10 relative px-4 py-6">
               {children}
             </div>
           </div>
 
           {/* 🔥 Nút ở giữa cạnh phải */}
-          <div className="fixed bottom-2 right-0 transform -translate-y-1/2 z-50">
+          <div className="right-10 bottom-2 z-50 fixed -translate-y-1/2 transform">
             <ThemeToggleButton />
           </div>
         </Providers>
