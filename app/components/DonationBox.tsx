@@ -5,68 +5,92 @@ export default function DonationBox() {
 
   return (
     <div className="flex flex-col items-center w-full lg:w-96">
-      <div className="space-y-4 text-center">
-        <p>
-          💬 Hiện tại mình chưa có kinh phí để thuê server, vì vậy toàn bộ dữ liệu subscription đang được lưu
-          <strong> trên một server miễn phí (Supabase) và có giới hạn</strong>. Tuy nhiên dữ liệu này hoàn toàn riêng tư và không ai khác có thể truy cập.
-        </p>
-        <p>
-          ⚠️ Nếu có kinh phí triển khai server và database, hệ thống sẽ lưu trữ vĩnh viễn và đồng bộ mọi lúc, mọi nơi.
-        </p>
-        <p className="font-semibold">
-          🙏 Nếu bạn thấy dự án hữu ích, hãy ủng hộ một chút chi phí để mình có thể duy trì và phát triển thêm nhé!
-        </p>
-        <hr className="my-4 border-gray-300 dark:border-zinc-600" />
-        <p className="dark:text-neutral-400 text-sm italic">
-          💬 Currently, due to limited budget, I don't have a server — so your data is stored supabase (no-free tier) and is fully private.
-          A database would allow permanent, secure storage. If you find this tool useful, consider supporting this project!
-        </p>
-      </div>
+      <div className="space-y-6 bg-white/20 dark:bg-zinc-800/30 shadow-lg backdrop-blur-md p-6 border border-white/30 dark:border-white/20 rounded-2xl w-full animate-fade-in">
+        
+        {/* Thông tin */}
+        <div className="space-y-4 text-gray-800 dark:text-gray-300 text-center">
+          <p>
+            💬 Hiện tại mình chưa có kinh phí để thuê server, vì vậy toàn bộ dữ liệu subscription đang được lưu
+            <strong> trên một server miễn phí (Supabase)</strong> và có giới hạn.
+          </p>
+          <p>
+            ⚠️ Nếu có kinh phí triển khai server và database, hệ thống sẽ lưu trữ vĩnh viễn và đồng bộ mọi lúc, mọi nơi.
+          </p>
+          <p className="font-semibold">
+            🙏 Nếu bạn thấy dự án hữu ích, hãy ủng hộ một chút chi phí để mình duy trì và phát triển nhé!
+          </p>
+          <hr className="my-4 border-gray-300 dark:border-zinc-600 border-t" />
+          <p className="text-gray-600 dark:text-neutral-400 text-sm italic">
+            💬 Currently, due to limited budget, data is stored on free Supabase.  
+            Permanent storage needs a real database.  
+            If you find this project useful, consider supporting it!
+          </p>
+        </div>
 
-      <div className="mt-10 text-center">
-        <h3 className="mb-2 font-semibold text-xl">🎁 Ủng hộ tác giả</h3>
-        <p className="mb-4 text-gray-500">Quét mã QR để chuyển khoản Vietinbank</p>
-        <div className="inline-block p-4 rounded-lg">
-          <img
-            src="/vietqr.gif"
-            alt="QR Vietinbank"
-            className="rounded-md w-64 h-64 object-contain hover:scale-105 transition cursor-pointer"
+        {/* QR Donation */}
+        <div className="space-y-2 text-center">
+          <h3 className="font-bold text-indigo-600 dark:text-indigo-400 text-2xl">🎁 Ủng hộ tác giả</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Quét mã QR để chuyển khoản Vietinbank</p>
+          <div className="inline-block bg-white/40 dark:bg-white/10 shadow-md hover:shadow-2xl p-4 border border-white/30 dark:border-white/20 rounded-2xl hover:scale-105 transition cursor-pointer"
             onClick={() => setShowZoomQRDonation(true)}
-          />
-        </div>
-      </div>
-
-      {/* ✨ Glassmorphism Contact Info */}
-      <div className="mt-8 w-full">
-        <div className="bg-white/30 dark:bg-black/30 shadow-lg backdrop-blur-md p-4 rounded-xl text-gray-700 dark:text-gray-300 text-sm text-center">
-          Mọi chi tiết đóng góp xin liên hệ <a href="mailto:lebaokhaky@gmail.com" className="font-semibold underline">lebaokhaky@gmail.com</a>
-        </div>
-      </div>
-
-      {showZoomQRDonation && (
-        <div
-          className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-60 backdrop-blur-sm"
-          onClick={() => setShowZoomQRDonation(false)}
-        >
-          <div
-            className="bg-white dark:bg-zinc-900 shadow-2xl p-6 rounded-2xl animate-popup-zoom"
-            onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-4 font-bold text-xl text-center">🎁 Quét QR để ủng hộ tác giả</h2>
             <img
               src="/vietqr.gif"
               alt="QR Vietinbank"
-              className="mx-auto w-80 h-auto object-contain"
+              className="rounded-xl w-52 h-52 object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Liên hệ */}
+        <div className="mt-6 text-gray-600 dark:text-gray-400 text-sm text-center">
+          Mọi chi tiết đóng góp xin liên hệ <a href="mailto:lebaokhaky@gmail.com" className="font-semibold hover:text-indigo-500 underline">lebaokhaky@gmail.com</a>
+        </div>
+      </div>
+
+      {/* Popup QR */}
+      {showZoomQRDonation && (
+        <div
+          className="z-50 fixed inset-0 flex justify-center items-center bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowZoomQRDonation(false)}
+        >
+          <div
+            className="flex flex-col items-center bg-white/30 dark:bg-zinc-800/40 shadow-2xl backdrop-blur-md p-6 border border-white/20 dark:border-white/10 rounded-2xl animate-zoom-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="mb-4 font-bold text-gray-800 dark:text-gray-200 text-xl text-center">🎁 Ủng hộ tác giả</h2>
+            <img
+              src="/vietqr.gif"
+              alt="QR Vietinbank"
+              className="rounded-xl w-80 h-auto object-contain"
             />
             <button
               onClick={() => setShowZoomQRDonation(false)}
-              className="bg-indigo-600 hover:bg-indigo-700 mt-6 px-4 py-2 rounded-lg w-full text-white transition"
+              className="bg-indigo-600 hover:bg-indigo-700 mt-6 px-6 py-2 rounded-xl text-white transition"
             >
               Đóng
             </button>
           </div>
         </div>
       )}
+
+      {/* 👇 thêm animation style */}
+      <style jsx global>{`
+        @keyframes fade-in {
+          from { opacity: 0 }
+          to { opacity: 1 }
+        }
+        @keyframes zoom-in {
+          from { transform: scale(0.5); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease-out;
+        }
+        .animate-zoom-in {
+          animation: zoom-in 0.4s ease-out;
+        }
+      `}</style>
     </div>
   )
 }

@@ -15,6 +15,7 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
   const [rememberedIds, setRememberedIds] = useState<Record<string, boolean>>({})
   const [toastMessage, setToastMessage] = useState('')
   const [showToast, setShowToast] = useState(false)
+  const [qrModalId, setQrModalId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -98,17 +99,23 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
                     </div>
                   )}
                 </div>
-                <QRCodeCanvas
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${sub.id}`}
-                  size={64}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                  className="shadow rounded cursor-zoom-in"
+                <div
+                  className="bg-gradient-to-br from-white/80 dark:from-white via-gray-200 dark:via-gray-400 to-white/70 dark:to-gray-700 shadow-lg hover:shadow-2xl p-2 rounded-2xl transition-all duration-300 cursor-pointer"
                   onClick={(e) => {
-                    e.stopPropagation()
-                    onQrCodeClick(sub.id)
+                    e.stopPropagation();
+                    setQrModalId(sub.id); // Mở popup
                   }}
-                />
+                  title="Click để xem QR lớn"
+                >
+                  <QRCodeCanvas
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${sub.id}`}
+                    size={72}
+                    bgColor="transparent"
+                    fgColor="#000000"
+                    className="rounded-lg"
+                  />
+                </div>
+
               </li>
             ))}
           </ul>
@@ -120,6 +127,34 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
           {toastMessage}
         </div>
       )}
+
+      {qrModalId && (
+        <div
+          className="z-50 fixed inset-0 flex justify-center items-center backdrop-blur-lg animate-fade-in"
+          onClick={() => setQrModalId(null)}
+        >
+          <div
+            className="relative flex flex-col items-center bg-gradient-to-br from-white/80 dark:from-white via-gray-200 dark:via-gray-400 to-white/70 dark:to-gray-700 shadow-2xl p-6 rounded-2xl max-w-[90%] max-h-[90%] animate-zoom-in"
+            onClick={(e) => e.stopPropagation()} // Ngăn đóng khi click vào bên trong QR
+          >
+            <button
+              className="top-2 right-2 absolute text-gray-500 hover:text-gray-800 dark:hover:text-white text-2xl"
+              onClick={() => setQrModalId(null)}
+            >
+              ×
+            </button>
+            <QRCodeCanvas
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/manage/${qrModalId}`}
+              size={300}
+              bgColor="transparent"
+              fgColor="#000000"
+              className="rounded-lg"
+            />
+           
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
