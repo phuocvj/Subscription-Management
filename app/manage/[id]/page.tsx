@@ -4,11 +4,13 @@ import { supabase } from '@/app/lib/supabase'
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import CloneNext12MonthsModal from '@/app/components/CloneNext12MonthsModal'
-import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus } from 'react-icons/fa'
+import { FaCalendarAlt, FaUserFriends, FaMoneyBillWave, FaLayerGroup, FaMagic, FaTrashAlt, FaEquals, FaPlus, FaTrash, FaCheckCircle, FaRegCircle, FaUserPlus, FaArrowLeft } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import InviteList from '@/app/components/InviteList'
 import CloneNextPeriodsModal from '@/app/components/CloneNext12MonthsModal'
 import TextareaAutosize from 'react-textarea-autosize'
+import Select from 'react-select'
+import { Sheet } from 'react-modal-sheet'
 
 // Loại thành viên
 type Member = {
@@ -74,7 +76,8 @@ export default function ManageSubscriptionPage() {
     const router = useRouter()
     const subscriptionRowRaw = useRef<any>(null)
 
-    // const isEditable = userId && ownerId && userId === ownerId
+    const [isOpen, setIsOpen] = useState(false)
+
     // Kiểm tra xem có phải người được mời chưa xác nhận không
     useEffect(() => {
         if (!userEmail) return
@@ -227,87 +230,6 @@ export default function ManageSubscriptionPage() {
 
         fetchSubscription()
     }, [code, userId, userEmail])
-
-    // useEffect(() => {
-    //     const fetchSubscription = async () => {
-    //         const { data: row, error } = await supabase
-    //             .from('subscriptions')
-    //             .select('*')
-    //             .eq('id', code)
-    //             .single()
-
-    //         if (error && error.code !== 'PGRST116') {
-    //             console.error('Lỗi khi load subscription:', error)
-    //         }
-
-    //         const now = new Date()
-    //         const monthKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-    //         setCurrentMonth(monthKey)
-
-    //         let data: SubscriptionData
-
-    //         if (row) {
-    //             setOwnerId(row.owner_id || null)
-    //             data = {
-    //                 ...row.data,
-    //                 password: row.password ?? '',
-    //                 note: row.note ?? '',
-    //             }
-    //         } else {
-    //             // Nếu không có row (mã không tồn tại), không tạo mới nếu chưa đăng nhập
-    //             if (!userId) {
-    //                 console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
-    //                 return
-    //             }
-
-    //             // Tạo subscription mới nếu đang đăng nhập và chưa có
-    //             data = { name: '', history: {}, password: '', note: '' }
-    //             await supabase.from('subscriptions').insert({
-    //                 id: code,
-    //                 name: '',
-    //                 owner_id: userId,
-    //                 data,
-    //                 created_at: now.toISOString(),
-    //                 last_edited_at: now.toISOString(),
-    //                 last_edited_by: userId + '|' + userEmail,
-    //             })
-    //             setOwnerId(userId)
-    //         }
-
-    //         // Đảm bảo có dữ liệu tháng hiện tại
-    //         if (!data.history[monthKey]) {
-    //             data.history[monthKey] = {
-    //                 amount: 0,
-    //                 members: []
-    //             }
-    //             setNewAmount(0)
-    //         } else {
-    //             setNewAmount(data.history[monthKey].amount ?? 0)
-    //         }
-
-    //         setSubscription(data)
-
-    //         // Xác định quyền chỉnh sửa
-    //         if (row?.owner_id === userId) {
-    //             setIsEditable(true)
-    //             setIsOwner(true);
-    //         } else if (userEmail) {
-    //             const { data: editor } = await supabase
-    //                 .from('subscription_editors')
-    //                 .select('accepted')
-    //                 .eq('subscription_id', code)
-    //                 .eq('email', userEmail.toLowerCase())
-    //                 .maybeSingle()
-
-    //             if (editor?.accepted) {
-    //                 setIsEditable(true)
-    //             }
-    //             setIsOwner(false);
-    //         }
-    //     }
-
-    //     fetchSubscription()
-    // }, [code, userId, userEmail])
 
     useEffect(() => {
         const saveData = async () => {
@@ -498,7 +420,7 @@ export default function ManageSubscriptionPage() {
     if (showPasswordPrompt) {
         return (
             <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm">
-                <div className="space-y-6 bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md mx-auto p-6 border border-white/30 dark:border-white/20 rounded-2xl w-full max-w-md animate-scale-fade-in">
+                <div className="space-y-6 bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md mx-auto p-6 border border-white/30 dark:border-white/20 rounded-2xl w-full max-w-md ">
 
                     <div className="flex items-center gap-3">
                         <span className="text-3xl">🔐</span>
@@ -584,18 +506,49 @@ export default function ManageSubscriptionPage() {
 
         )
     }
-    if (!subscription || !currentMonth || !subscription.history[currentMonth])
+    if (!subscription || !currentMonth || !subscription.history[currentMonth]) {
+        if (!userId) {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen gap-4 p-4">
+                    <div className="bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md p-8 border border-white/30 dark:border-white/20 rounded-2xl w-full max-w-md animate-scale-fade-in text-center">
+                        <div className="flex items-center justify-center gap-3 mb-6">
+                            <span className="text-3xl">🔒</span>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Cần đăng nhập
+                            </h2>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 mb-8">
+                            Bạn cần đăng nhập để xem subscription này
+                        </p>
+                        <div className="flex justify-center">
+                            <button
+                                onClick={() => router.push('/')}
+                                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-lg backdrop-blur-md px-6 py-3 border border-white/30 dark:border-white/20 rounded-xl font-semibold text-gray-900 dark:text-white transition hover:scale-105"
+                            >
+                                <FaCalendarAlt className="text-blue-600" />
+                                Về trang chủ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
         return (
-            <div className="flex justify-center items-center min-h-screen text-blue-600 text-lg animate-pulse">
-                🔄 Đang kiểm tra dữ liệu...
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md p-6 border border-white/30 dark:border-white/20 rounded-2xl animate-scale-fade-in">
+                    <div className="text-blue-600 text-lg animate-pulse">
+                        🔄 Đang kiểm tra dữ liệu...
+                    </div>
+                </div>
             </div>
         )
+    }
 
     const current = subscription.history[currentMonth]
 
     // phần render mới với phân quyền isEditable
     return (
-        <div className="space-y-6 bg-gradient-to-br from-white/20 dark:from-gray-800 via-gray-100/25 dark:via-gray-900/20 to-gray-200/20 dark:to-black shadow-md dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] backdrop-blur-md mx-auto p-6 rounded-lg">
+        <div className="space-y-6 bg-gradient-to-br from-indigo-200/90 via-purple-100/85 to-pink-200/90 dark:from-gray-800 dark:via-gray-900/20 dark:to-black shadow-md dark:shadow-[0_0_20px_rgba(255,255,255,0.15)] backdrop-blur-md mx-auto p-6 rounded-lg w-full max-w-4xl">
             <h1 className="flex items-center gap-2 font-bold text-2xl">
                 <FaLayerGroup className="text-blue-600" /> Subscription {code}
             </h1>
@@ -605,11 +558,10 @@ export default function ManageSubscriptionPage() {
             </h2>
             <div className="flex items-center gap-3 mt-4">
                 <button
-                    onClick={() => router.push('/')}
-                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 shadow-sm backdrop-blur-md px-4 py-2 border border-white/30 dark:border-white/20 rounded-lg font-semibold text-gray-900 dark:text-white hover:scale-105 transition-all"
+                    onClick={() => router.back()}
+                    className="p-2 rounded-lg bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300"
                 >
-                    <FaCalendarAlt className="text-blue-600" />
-                    Trang chủ
+                    <FaArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 </button>
 
                 {isEditable && isOwner && (
@@ -682,42 +634,71 @@ export default function ManageSubscriptionPage() {
             </div>)}
 
             <div className="space-y-3 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
-
                 <label className="block mb-2 font-semibold text-lg">
                     {subscription.subscription_type === 'year' ? '🗓️ Chọn năm' : '🗓️ Chọn tháng'}
                 </label>
-                <div className="gap-2 grid grid-cols-4 md:grid-cols-8">
-                    {Object.keys(subscription.history)
-                        .filter(key => {
-                            if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key);
-                            return /^\d{2}\/\d{4}$/.test(key);
-                        })
-                        .sort((a, b) => {
-                            const [aM, aY] = a.split('/').map(Number);
-                            const [bM, bY] = b.split('/').map(Number);
-                            return new Date(aY, aM - 1).getTime() - new Date(bY, bM - 1).getTime();
-                        })
-                        .map(month => (
-                            <button
-                                key={month}
-                                onClick={() => switchMonth(month)}
-                                className={`w-full flex items-center justify-center gap-1 px-4 py-2 rounded-md shadow-sm text-sm transition-all border
-                        ${month === currentMonth
-                                        ? 'bg-pink-500 dark:bg-yellow-300 dark:text-black text-white  border-2  font-semibold border-amber-300 dark:border-pink-500 scale-105 text-sm'
-                                        : '    hover:bg-blue-500  '
-                                    }`}
-                            >
-                                📅 {month}
-                            </button>
-                        ))}
-                </div>
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white/20 dark:bg-white/10 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-400 flex items-center justify-between"
+                >
+                    <span>📅 {currentMonth}</span>
+                    <span>▼</span>
+                </button>
+
+                <Sheet
+                    isOpen={isOpen}
+                    onClose={() => setIsOpen(false)}
+                    snapPoints={[600, 400, 100, 0]}
+                    initialSnap={1}
+                    className="react-modal-sheet"
+                >
+                    <Sheet.Container>
+                        <Sheet.Header />
+                        <Sheet.Content>
+                            <div className="p-4">
+                                <h3 className="text-lg font-semibold mb-4">
+                                    {subscription.subscription_type === 'year' ? 'Chọn năm' : 'Chọn tháng'}
+                                </h3>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {Object.keys(subscription.history)
+                                        .filter(key => {
+                                            if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key);
+                                            return /^\d{2}\/\d{4}$/.test(key);
+                                        })
+                                        .sort((a, b) => {
+                                            const [aM, aY] = a.split('/').map(Number);
+                                            const [bM, bY] = b.split('/').map(Number);
+                                            return new Date(aY, aM - 1).getTime() - new Date(bY, bM - 1).getTime();
+                                        })
+                                        .map(month => (
+                                            <button
+                                                key={month}
+                                                onClick={() => {
+                                                    switchMonth(month);
+                                                    setIsOpen(false);
+                                                }}
+                                                className={`p-3 rounded-lg text-center transition-colors
+                                                    ${month === currentMonth
+                                                        ? 'bg-amber-500 text-white'
+                                                        : 'bg-white/20 hover:bg-amber-100 dark:hover:bg-amber-900/20'
+                                                    }`}
+                                            >
+                                                📅 {month}
+                                            </button>
+                                        ))}
+                                </div>
+                            </div>
+                        </Sheet.Content>
+                    </Sheet.Container>
+                    <Sheet.Backdrop onTap={() => setIsOpen(false)} />
+                </Sheet>
             </div>
 
 
 
 
             {isEditable && (
-                <div className="space-y-4 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl">
+                <div className="space-y-4 shadow-lg backdrop-blur-md p-4 border-2 rounded-2xl z-9999">
 
                     <label className="block mb-1 font-medium">💰 Tổng số tiền (VNĐ)</label>
                     <input
@@ -853,7 +834,7 @@ export default function ManageSubscriptionPage() {
                                     value={m.note}
                                     onChange={e => updateNote(i, e.target.value)}
                                     placeholder="Ghi chú..."
-                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full overflow-hidden text-md text-yellow-300 dark:text-white transition-all resize-none"
+                                    className="disabled:opacity-60 mt-2 px-3 py-2 border rounded w-full overflow-hidden text-md text-black dark:text-white transition-all resize-none"
                                 />
                             ) : (
                                 m.note && (

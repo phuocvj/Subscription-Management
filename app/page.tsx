@@ -27,9 +27,9 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-6">
             <button
               onClick={() => router.push('/create')}
-              className="group relative flex justify-center items-center bg-blue-600 hover:bg-blue-700 shadow-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition"
+              className="group relative flex justify-center items-center bg-gradient-to-r from-sky-400/90 to-indigo-500/90 dark:from-violet-500/90 dark:to-purple-600/90 hover:from-sky-500/90 hover:to-indigo-600/90 dark:hover:from-violet-600/90 dark:hover:to-purple-700/90 shadow-lg backdrop-blur-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition-all duration-300 border border-white/20 dark:border-white/10"
             >
-              <FaPlusCircle className="sm:text-xl text-4xl transition-all duration-300" />
+              <FaPlusCircle className="sm:text-xl text-4xl transition-all duration-300 group-hover:scale-110" />
               <span className="sm:static absolute opacity-0 sm:opacity-100 ml-2 max-w-0 sm:max-w-full overflow-hidden whitespace-nowrap transition-all duration-300">
                 Create A Subscription
               </span>
@@ -37,9 +37,9 @@ export default function HomePage() {
 
             <button
               onClick={() => router.push('/open')}
-              className="group relative flex justify-center items-center bg-green-600 hover:bg-green-700 shadow-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition"
+              className="group relative flex justify-center items-center bg-gradient-to-r from-fuchsia-500/90 to-pink-500/90 dark:from-rose-500/90 dark:to-pink-600/90 hover:from-fuchsia-600/90 hover:to-pink-600/90 dark:hover:from-rose-600/90 dark:hover:to-pink-700/90 shadow-lg backdrop-blur-md sm:px-6 sm:py-4 rounded-full sm:rounded-lg w-[72px] sm:w-auto h-[72px] sm:h-auto text-white text-lg transition-all duration-300 border border-white/20 dark:border-white/10"
             >
-              <FaFolderOpen className="sm:text-xl text-4xl transition-all duration-300" />
+              <FaFolderOpen className="sm:text-xl text-4xl transition-all duration-300 group-hover:scale-110" />
               <span className="sm:static absolute opacity-0 sm:opacity-100 ml-2 max-w-0 sm:max-w-full overflow-hidden whitespace-nowrap transition-all duration-300">
                 Open A Subscription
               </span>

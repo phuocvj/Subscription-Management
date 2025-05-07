@@ -30,15 +30,20 @@ export default function DarkModeToggle() {
   }
 
   return (
-    <div className="top-16 right-4 z-50 fixed">
+    <div className="top-4 right-4 z-50 fixed">
       <div ref={containerRef} className="relative">
         {/* Button */}
         <button
           onClick={toggleTheme}
-          className="z-10 relative bg-white/30 dark:bg-black/30 shadow-md backdrop-blur-md p-2 border border-white/20 rounded-full text-white hover:scale-110 transition"
+          className="z-10 relative bg-white/30 dark:bg-black/30 shadow-md backdrop-blur-md p-3 border border-white/20 rounded-full hover:scale-110 transition"
           aria-label="Toggle theme"
         >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          <div className={`transition-transform duration-500 ease-in-out ${isDarkMode ? 'rotate-360' : ''}`}>
+            {isDarkMode ? 
+              <Sun className="w-6 h-6 text-amber-500" /> : 
+              <Moon className="w-6 h-6 text-indigo-600" />
+            }
+          </div>
         </button>
 
         {/* Animation Circle */}

@@ -7,9 +7,22 @@ interface SubscriptionListProps {
   subs: any[]
   invitedMap: Record<string, string>
   onQrCodeClick: (id: string) => void
+  isLoading?: boolean
 }
 
-export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: SubscriptionListProps) {
+// Skeleton component for loading state
+const SubscriptionSkeleton = () => (
+  <div className="flex justify-between items-center gap-4 bg-white/10 shadow-sm p-4 border rounded-xl animate-pulse">
+    <div className="flex-1 space-y-3">
+      <div className="h-4 bg-white/20 rounded w-24"></div>
+      <div className="h-6 bg-white/20 rounded w-48"></div>
+      <div className="h-4 bg-white/20 rounded w-32"></div>
+    </div>
+    <div className="w-[72px] h-[72px] bg-white/20 rounded-2xl"></div>
+  </div>
+)
+
+export default function SubscriptionList({ subs, invitedMap, onQrCodeClick, isLoading = false }: SubscriptionListProps) {
   const router = useRouter()
   const [searchText, setSearchText] = useState('')
   const [rememberedIds, setRememberedIds] = useState<Record<string, boolean>>({})
@@ -29,19 +42,25 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
 
   const isRemembered = (id: string) => rememberedIds[id]
 
-
   return (
     <div className="space-y-4 lg:col-span-2 bg-gradient-to-br from-white/20 dark:from-gray-800 via-gray-100/25 dark:via-gray-900/20 to-gray-200/20 dark:to-black shadow-md backdrop-blur-md p-6 border-2 rounded-lg">
-      {subs.length > 0 && (
-        <div className="rounded-2xl">
-          <h2 className="flex items-center gap-2 mb-4 font-mono font-bold text-2xl">📦 Subscription List</h2>
-          <input
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="✨ Tìm theo tên hoặc mã subscription..."
-            className="mb-6 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-black dark:text-white text-sm"
-          />
+      <div className="rounded-2xl">
+        <h2 className="flex items-center gap-2 mb-4 font-mono font-bold text-2xl">📦 Subscription List</h2>
+        <input
+          type="text"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          placeholder="✨ Tìm theo tên hoặc mã subscription..."
+          className="mb-6 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full text-black dark:text-white text-sm"
+        />
+        
+        {isLoading ? (
+          <div className="space-y-4">
+            {[...Array(3)].map((_, index) => (
+              <SubscriptionSkeleton key={index} />
+            ))}
+          </div>
+        ) : subs.length > 0 ? (
           <ul className="space-y-4">
             {subs.filter(sub => {
               const keyword = searchText.trim().toLowerCase()
@@ -87,7 +106,6 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
                         )}
                       </>
                     )}
-
                   </div>
                   <div className="font-mono font-bold text-lg">{sub.name}</div>
                   {invitedMap[sub.id] && (
@@ -103,7 +121,7 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
                   className="bg-gradient-to-br from-white/80 dark:from-white via-gray-200 dark:via-gray-400 to-white/70 dark:to-gray-700 shadow-lg hover:shadow-2xl p-2 rounded-2xl transition-all duration-300 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setQrModalId(sub.id); // Mở popup
+                    setQrModalId(sub.id);
                   }}
                   title="Click để xem QR lớn"
                 >
@@ -115,12 +133,15 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
                     className="rounded-lg"
                   />
                 </div>
-
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            Không tìm thấy subscription nào
+          </div>
+        )}
+      </div>
 
       {showToast && (
         <div className="right-6 bottom-6 fixed bg-white/30 dark:bg-zinc-800/40 shadow-lg backdrop-blur-md px-4 py-3 border border-white/20 rounded-xl text-black dark:text-white animate-fade-in">
@@ -135,7 +156,7 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
         >
           <div
             className="relative flex flex-col items-center bg-gradient-to-br from-white/80 dark:from-white via-gray-200 dark:via-gray-400 to-white/70 dark:to-gray-700 shadow-2xl p-6 rounded-2xl max-w-[90%] max-h-[90%] animate-zoom-in"
-            onClick={(e) => e.stopPropagation()} // Ngăn đóng khi click vào bên trong QR
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="top-2 right-2 absolute text-gray-500 hover:text-gray-800 dark:hover:text-white text-2xl"
@@ -150,11 +171,9 @@ export default function SubscriptionList({ subs, invitedMap, onQrCodeClick }: Su
               fgColor="#000000"
               className="rounded-lg"
             />
-           
           </div>
         </div>
       )}
-
     </div>
   )
 }
