@@ -6,7 +6,7 @@ export default function DonationBox() {
   return (
     <div className="flex flex-col items-center w-full lg:w-96">
       <div className="space-y-6 bg-white/20 dark:bg-zinc-800/30 shadow-lg backdrop-blur-md p-6 border border-white/30 dark:border-white/20 rounded-2xl w-full animate-fade-in">
-        
+
         {/* Thông tin */}
         <div className="space-y-4 text-gray-800 dark:text-gray-300 text-center">
           <p>
@@ -21,8 +21,8 @@ export default function DonationBox() {
           </p>
           <hr className="my-4 border-gray-300 dark:border-zinc-600 border-t" />
           <p className="text-gray-600 dark:text-neutral-400 text-sm italic">
-            💬 Currently, due to limited budget, data is stored on free Supabase.  
-            Permanent storage needs a real database.  
+            💬 Currently, due to limited budget, data is stored on free Supabase.
+            Permanent storage needs a real database.
             If you find this project useful, consider supporting it!
           </p>
         </div>
@@ -43,8 +43,26 @@ export default function DonationBox() {
         </div>
 
         {/* Liên hệ */}
-        <div className="mt-6 text-gray-600 dark:text-gray-400 text-sm text-center">
-          Mọi chi tiết đóng góp xin liên hệ <a href="mailto:lebaokhaky@gmail.com" className="font-semibold hover:text-indigo-500 underline">lebaokhaky@gmail.com</a>
+        <div className="mt-6 space-y-2 text-gray-600 dark:text-gray-400 text-sm text-center">
+          <div>
+            Mọi chi tiết đóng góp xin liên hệ{' '}
+            <a href="mailto:lebaokhaky@gmail.com" className="font-semibold hover:text-indigo-500 underline">
+              lebaokhaky@gmail.com
+            </a>
+          </div>
+
+          {/* Góp ý / Báo lỗi */}
+          <div>
+            🛠️ Góp ý hoặc báo lỗi tại:{' '}
+            <a
+              href="https://subsmanager.userjot.com/?cursor=1&order=top&limit=10"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold hover:text-indigo-500 underline"
+            >
+              SubsManager Feedback
+            </a>
+          </div>
         </div>
       </div>
 
