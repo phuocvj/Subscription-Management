@@ -5,8 +5,12 @@ import { useRouter } from 'next/navigation'
 import { FaMagic, FaSpinner, FaArrowRight } from 'react-icons/fa'
 import { supabase } from '@/app/lib/supabase'
 import { customAlphabet, nanoid } from 'nanoid'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
+import { vi } from 'date-fns/locale'
+import { format } from 'date-fns'
+import { FaCalendarAlt } from 'react-icons/fa'
 
 async function generateUniqueCode(): Promise<string> {
     let code = ''
@@ -41,6 +45,7 @@ async function generateUniqueCode(): Promise<string> {
         }
     }
 }
+
 export default function CreatePage() {
     const [code, setCode] = useState('')
     const [error, setError] = useState<string | null>(null)
@@ -109,11 +114,9 @@ export default function CreatePage() {
         router.push(`/manage/${code}?type=${type}`)
     }
 
-
-
     return (
-        <div className="flex justify-center items-center px-4 min-h-screen text-center">
-            <div className="space-y-6">
+        <div className="flex justify-center items-center px-4 min-h-screen text-center bg-gradient-to-br from-indigo-200/90 via-purple-100/85 to-pink-200/90 dark:from-gray-800 dark:via-gray-900/20 dark:to-black w-full">
+            <div className="space-y-6 bg-white/30 dark:bg-zinc-800/30 shadow-2xl backdrop-blur-md p-8 border border-white/30 dark:border-white/20 rounded-2xl w-full max-w-md animate-scale-fade-in">
                 <div className="flex justify-center text-blue-600 text-4xl">
                     <FaMagic className="animate-pulse" />
                 </div>
@@ -122,50 +125,112 @@ export default function CreatePage() {
                     <p className="text-red-600 text-lg">{error}</p>
                 ) : (
                     <>
-                        <p className="font-mono text-blue-800 text-2xl tracking-widest">
+                        <p className="font-mono text-blue-800 dark:text-blue-300 text-2xl tracking-widest">
                             {code}
                         </p>
-                        <h2 className="font-bold text-2xl">Một bước nữa, hãy chọn loại đăng ký nhé!</h2>
+                        <h2 className="font-bold text-2xl text-gray-900 dark:text-white">Một bước nữa</h2>
 
                         {code && (
                             <div className="space-y-6 text-left justify-items-center max-w-sm mx-auto">
                                 {/* Ngày đăng ký */}
-                                <div className="space-y-1">
-                                    <label htmlFor="reg-date" className="block text-sm font-medium">
+                                <div className="space-y-2">
+                                    <label htmlFor="reg-date" className="block text-sm font-medium text-gray-900 dark:text-white">
                                         Ngày đăng ký
                                     </label>
-                                    <DatePicker
-                                        id="reg-date"
-                                        selected={selectedDate}
-                                        onChange={(date: Date | null) => date && setSelectedDate(date)}
-                                        dateFormat="yyyy-MM-dd"
-                                        className="w-full border  rounded px-3 py-2   focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                    <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
+                                        <DatePicker
+                                            value={selectedDate}
+                                            onChange={(newValue) => newValue && setSelectedDate(newValue)}
+                                            format="dd/MM/yyyy"
+                                            slotProps={{
+                                                textField: {
+                                                    fullWidth: true,
+                                                    variant: "outlined",
+                                                    InputProps: {
+                                                        className: "bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border-gray-200 dark:border-gray-700 rounded-lg hover:bg-white/70 dark:hover:bg-gray-800/70 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-all duration-200",
+                                                        startAdornment: (
+                                                            <FaCalendarAlt className="text-gray-400 dark:text-gray-500 mr-2" />
+                                                        ),
+                                                    },
+                                                    sx: {
+                                                        '& .MuiOutlinedInput-root': {
+                                                            '& fieldset': {
+                                                                borderColor: 'rgba(156, 163, 175, 0.2)',
+                                                            },
+                                                            '&:hover fieldset': {
+                                                                borderColor: 'rgba(156, 163, 175, 0.4)',
+                                                            },
+                                                            '&.Mui-focused fieldset': {
+                                                                borderColor: 'rgb(99, 102, 241)',
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                                popper: {
+                                                    sx: {
+                                                        '& .MuiPaper-root': {
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                            backdropFilter: 'blur(8px)',
+                                                            borderRadius: '1rem',
+                                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                                        },
+                                                        '& .MuiPickersDay-root': {
+                                                            borderRadius: '0.5rem',
+                                                            margin: '0.2rem',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                                                            },
+                                                            '&.Mui-selected': {
+                                                                backgroundColor: 'rgb(99, 102, 241)',
+                                                                color: 'white',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgb(79, 70, 229)',
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </LocalizationProvider>
                                 </div>
 
                                 {/* Loại đăng ký */}
-                                <div className="space-y-1">
-
-                                    <div className="flex items-center gap-6 mt-1">
-                                        <label className="flex items-center gap-2 text-sm">
+                                <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <label className="relative flex items-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm cursor-pointer hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-200">
                                             <input
                                                 type="radio"
                                                 name="type"
                                                 value="month"
                                                 checked={type === 'month'}
-                                                onChange={() => setType('month')}
+                                                onChange={(e) => setType(e.target.value as 'month' | 'year')}
+                                                className="sr-only"
                                             />
-                                            <span>Đăng ký mỗi tháng</span>
+                                            <div className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${
+                                                type === 'month' 
+                                                    ? 'border-indigo-500 bg-indigo-500' 
+                                                    : 'border-gray-300 dark:border-gray-600'
+                                            }`} />
+                                            <span className="ml-3 text-gray-900 dark:text-white">Tháng</span>
                                         </label>
-                                        <label className="flex items-center gap-2 text-sm">
+
+                                        <label className="relative flex items-center p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm cursor-pointer hover:bg-white/70 dark:hover:bg-gray-800/70 transition-all duration-200">
                                             <input
                                                 type="radio"
                                                 name="type"
                                                 value="year"
                                                 checked={type === 'year'}
-                                                onChange={() => setType('year')}
+                                                onChange={(e) => setType(e.target.value as 'month' | 'year')}
+                                                className="sr-only"
                                             />
-                                            <span>Đăng ký mỗi năm</span>
+                                            <div className={`w-4 h-4 rounded-full border-2 transition-colors duration-200 ${
+                                                type === 'year' 
+                                                    ? 'border-indigo-500 bg-indigo-500' 
+                                                    : 'border-gray-300 dark:border-gray-600'
+                                            }`} />
+                                            <span className="ml-3 text-gray-900 dark:text-white">Năm</span>
                                         </label>
                                     </div>
                                 </div>
@@ -174,18 +239,17 @@ export default function CreatePage() {
                                 <div className="flex justify-center">
                                     <button
                                         onClick={handleNext}
-                                        className="flex justify-center items-center bg-blue-600 hover:bg-blue-700 rounded-full w-14 h-14 text-white shadow-md transition"
+                                        className="flex justify-center items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-full w-14 h-14 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                                         title="Tiếp tục"
                                     >
                                         <FaArrowRight />
                                     </button>
                                 </div>
                             </div>
-
                         )}
 
                         {!code && (
-                            <div className="flex justify-center items-center gap-2 text-gray-500 text-sm">
+                            <div className="flex justify-center items-center gap-2 text-gray-600 dark:text-gray-300 text-sm">
                                 <FaSpinner className="animate-spin" />
                                 <span>Bạn sẽ được chuyển hướng trong giây lát...</span>
                             </div>

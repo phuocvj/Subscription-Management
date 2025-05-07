@@ -116,8 +116,19 @@ export default function ManageSubscriptionPage() {
                 .single()
             setInviteEmail
 
-            if (error && error.code !== 'PGRST116') {
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    // Subscription không tồn tại
+                    if (!userId) {
+                        // Nếu chưa đăng nhập, hiển thị thông báo yêu cầu đăng nhập
+                        return
+                    }
+                    // Nếu đã đăng nhập, chuyển hướng về trang tạo mới
+                    router.push('/create')
+                    return
+                }
                 console.error('Lỗi khi load subscription:', error)
+                return
             }
 
             const now = new Date()
@@ -125,24 +136,15 @@ export default function ManageSubscriptionPage() {
             let data: SubscriptionData
             subscriptionRowRaw.current = row
             if (row) {
-
                 setOwnerId(row.owner_id || null)
+                setRawRow(row)
 
-
-                // 👇 Nếu subscription đã có, chỉ cần lấy dữ liệu và cập nhật lại
-                setRawRow(row) // 👉 Lưu lại toàn bộ row để sau này dùng mật khẩu
-
-                // 👇 Nếu chưa đăng nhập mà subscription có mật khẩu → yêu cầu nhập
                 if (!userId && row.password) {
-
                     const remembered = JSON.parse(localStorage.getItem('subscription_remember') || '{}')
                     if (!remembered[code]) {
-                        // Nếu chưa nhớ mật khẩu → yêu cầu nhập
                         setShowPasswordPrompt(true)
-                        return // ⛔ Stop luôn không load tiếp data
+                        return
                     }
-
-                    return // ⛔ Không load tiếp nếu chưa xác minh
                 }
                 data = {
                     ...row.data,
@@ -150,42 +152,13 @@ export default function ManageSubscriptionPage() {
                     note: row.note ?? '',
                     subscription_type: subscriptionType,
                 }
-
-
             } else {
-                if (!userId) {
-                    console.warn('Chưa đăng nhập, không thể tạo mới subscription.')
-                    return
-                }
-
-                const defaultKey = `${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
-                data = {
-                    name: '',
-                    history: {
-                        [defaultKey]: {
-                            amount: 0,
-                            members: []
-                        }
-                    },
-                    password: '',
-                    note: '',
-                    subscription_type: subscriptionType
-                }
-
-                await supabase.from('subscriptions').insert({
-                    id: code,
-                    name: '',
-                    owner_id: userId,
-                    data,
-                    created_at: now.toISOString(),
-                    last_edited_at: now.toISOString(),
-                    last_edited_by: userId + '|' + userEmail,
-                })
-
-                setOwnerId(userId)
+                // Không tạo mới subscription khi truy cập trực tiếp
+                router.push('/create')
+                return
             }
 
-            // 👇 Xác định key hiển thị ban đầu (dựa vào loại subscription)
+            // Xác định key hiển thị ban đầu
             const subType = subscriptionType ?? 'month'
             let displayKey = ''
 
@@ -195,7 +168,6 @@ export default function ManageSubscriptionPage() {
                 displayKey = `${now.getFullYear()}`
             }
 
-            // 👇 Nếu key chưa tồn tại → thêm vào history
             if (!data.history[displayKey]) {
                 data.history[displayKey] = {
                     amount: 0,
@@ -209,7 +181,7 @@ export default function ManageSubscriptionPage() {
             setCurrentMonth(displayKey)
             setSubscription(data)
 
-            // 👇 Quyền chỉnh sửa
+            // Quyền chỉnh sửa
             if (row?.owner_id === userId) {
                 setIsEditable(true)
                 setIsOwner(true)
@@ -648,18 +620,18 @@ export default function ManageSubscriptionPage() {
                 <Sheet
                     isOpen={isOpen}
                     onClose={() => setIsOpen(false)}
-                    snapPoints={[600, 400, 100, 0]}
-                    initialSnap={1}
+                    snapPoints={[800,0]}
+                    initialSnap={0}
                     className="react-modal-sheet"
                 >
-                    <Sheet.Container>
-                        <Sheet.Header />
-                        <Sheet.Content>
-                            <div className="p-4">
-                                <h3 className="text-lg font-semibold mb-4">
+                    <Sheet.Container className="!bg-white/80 dark:!bg-gray-900/95 backdrop-blur-md">
+                        <Sheet.Header className="!bg-white/50 dark:!bg-gray-800/50 border-b border-gray-200 dark:border-gray-700" />
+                        <Sheet.Content className="max-h-[80vh] overflow-y-auto">
+                            <div className="p-4 pb-8">
+                                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
                                     {subscription.subscription_type === 'year' ? 'Chọn năm' : 'Chọn tháng'}
                                 </h3>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                                     {Object.keys(subscription.history)
                                         .filter(key => {
                                             if (subscription.subscription_type === 'year') return /^\d{4}$/.test(key);
@@ -677,20 +649,21 @@ export default function ManageSubscriptionPage() {
                                                     switchMonth(month);
                                                     setIsOpen(false);
                                                 }}
-                                                className={`p-3 rounded-lg text-center transition-colors
+                                                className={`p-2 rounded-lg text-center transition-all duration-200 backdrop-blur-sm
                                                     ${month === currentMonth
-                                                        ? 'bg-amber-500 text-white'
-                                                        : 'bg-white/20 hover:bg-amber-100 dark:hover:bg-amber-900/20'
+                                                        ? 'bg-amber-500/90 text-white shadow-lg scale-105'
+                                                        : 'bg-white/20 hover:bg-amber-100/50 dark:bg-gray-800/20 dark:hover:bg-amber-900/20 hover:scale-105 border border-white/10 dark:border-gray-700/50'
                                                     }`}
                                             >
-                                                📅 {month}
+                                                <div className="text-base font-medium">📅</div>
+                                                <div className="text-xs font-semibold text-gray-900 dark:text-white">{month}</div>
                                             </button>
                                         ))}
                                 </div>
                             </div>
                         </Sheet.Content>
                     </Sheet.Container>
-                    <Sheet.Backdrop onTap={() => setIsOpen(false)} />
+                    <Sheet.Backdrop onTap={() => setIsOpen(false)} className="!bg-black/20 dark:!bg-black/60 backdrop-blur-sm" />
                 </Sheet>
             </div>
 
